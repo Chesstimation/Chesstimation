@@ -1,4 +1,4 @@
-# OpenMephistoLVGL
+# Open Mephisto
 
 This project uses Arduino / ESP32 hardware to connect an old Hegener+Glaser Mephisto Modular chess computer (Modular, Exclusive or München Board) to a computer.
 To be able to use existing software on the (Windows-) Computer, a Certabo or a Millennium (Chesslink) board can be simulated.
