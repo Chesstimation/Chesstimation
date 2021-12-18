@@ -1,13 +1,15 @@
 # Open Mephisto
 
-This project uses Arduino / ESP32 hardware to connect an old Hegener+Glaser Mephisto Modular chess computer (Modular, Exclusive or München Board) to a computer.
+This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modular chess computer (Modular, Exclusive or München Board) to a computer.
 To be able to use existing software on the (Windows-) Computer, a Certabo or a Millennium (Chesslink) board can be simulated.
+Also the board can be connected to an iPhone using the White Pawn app (https://khadimfall.com/p/white-pawn) via Bluetooth Low Energy (BLE).
 
 # Following hardware components are required:
 1. Wemos LolinD32 or similar (sufficient number of GPIO pins is required, 12 pins for Mephisto board control + approx. 8 pins for touch display)
-2. 40-pin edge card connector (Sullins Connector Solutions EBC20DRAS or EDAC Inc. 395-040-558-301)
-3. 3.5 inch Waveshare TFT Arduino display (fits perfectly into one Mephisto module slot!)
-4. optionally lipo battery with plug for Lolin D32
+2. 40-pin edge card connector (Sullins Connector Solutions EBC20DRAS or EDAC Inc. 395-040-558-301 or Aliexpress: https://de.aliexpress.com/item/33035971298.html)
+3. Rainbow Ribbon Cable with 1.27mm spacing, e.g. from Aliexpress: https://de.aliexpress.com/item/1005003002882947.html
+4. 3.5 inch Waveshare TFT Pico Res Touch display: https://www.waveshare.com/pico-restouch-lcd-3.5.htm (fits perfectly into one Mephisto module slot!)
+5. optionally lipo battery with plug for Lolin D32
 
 # How to connect the 40-pin plug to the Mephisto board?
 
