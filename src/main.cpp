@@ -57,6 +57,7 @@ byte led_buffer[8];
 byte mephistoLED[8][8];
 byte eeprom[5]={0,20,3,20,15};
 byte oldBoard[64];
+int brightness = 255;
 
 //BLE objects
 BLEServer *pServer = NULL;
@@ -95,7 +96,7 @@ lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB;
-lv_obj_t *square[64];
+lv_obj_t *square[64], *dummy1Btn, *dummy2Btn;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void assembleIncomingChesslinkMessage(char readChar)
@@ -775,6 +776,20 @@ static void event_handler(lv_event_t *e)
   if (code == LV_EVENT_CLICKED)
   {
     // debugPrintln("LV-EVENT-CLICKED");
+    if (obj == dummy1Btn)
+    {
+      brightness+=10;
+      if (brightness > 255) brightness = 255;
+      ledcWrite(0, (uint8_t)brightness);
+      lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
+    }
+    if (obj == dummy2Btn)
+    {
+      brightness-=10;
+      if (brightness < 165) brightness = 165;
+      ledcWrite(0, (uint8_t)brightness);
+      lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
+    }
     
     if (obj == offBtn)
     {
@@ -787,6 +802,7 @@ static void event_handler(lv_event_t *e)
       // tft.writecommand(0x28);       // ILI9486 TFT Display Off
 
       // pinMode(GPIO_NUM_16, OUTPUT);
+      ledcDetachPin(TFT_BL);
       digitalWrite(GPIO_NUM_16, LOW);     // Switch off backlight, somehow does not work with ILI9488 Display???
 
       delay(1000);
@@ -839,6 +855,10 @@ static void event_handler(lv_event_t *e)
       // adc1_ulp_enable();
       gpio_deep_sleep_hold_en();
       esp_deep_sleep_start();
+    }
+    if (obj == settingsBtn)
+    {
+      lv_scr_load(settingsScreen);
     }
     if (obj == settingsBtn)
     {
@@ -964,6 +984,12 @@ void initLVGL()
   tft.begin();
 
   tft.setRotation(1);
+
+// Test for brightness control: did not work...
+  // tft.writecommand(0x53);
+  // tft.writedata(0xFF);
+  // tft.writecommand(0x51);
+  // tft.writedata(20);
 
   lv_init();
 
@@ -1096,10 +1122,11 @@ void createSettingsScreen()
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
-  object = lv_btn_create(content);
-  label = lv_label_create(object);
-  lv_label_set_text(label, "Dummy");
-  lv_obj_set_size(object, 160, 40);
+  dummy1Btn = lv_btn_create(content);
+  label = lv_label_create(dummy1Btn);
+  lv_label_set_text(label, "Brighter");
+  lv_obj_add_event_cb(dummy1Btn, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_set_size(dummy1Btn, 160, 40);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
@@ -1111,10 +1138,11 @@ void createSettingsScreen()
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
-  object = lv_btn_create(content);
-  label = lv_label_create(object);
-  lv_label_set_text(label, "Dummy2");
-  lv_obj_set_size(object, 160, 40);
+  dummy2Btn = lv_btn_create(content);
+  label = lv_label_create(dummy2Btn);
+  lv_label_set_text(label, "Darker");
+  lv_obj_add_event_cb(dummy2Btn, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_set_size(dummy2Btn, 160, 40);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
@@ -1314,9 +1342,15 @@ void setup()
   gpio_hold_dis(POWER_SAVE_PIN);
   digitalWrite(POWER_SAVE_PIN, HIGH);
 */
-  pinMode(GPIO_NUM_16, OUTPUT);
-  gpio_hold_dis(GPIO_NUM_16); 
-  digitalWrite(GPIO_NUM_16, HIGH);    
+
+  ledcSetup(0, 5000, 8);
+  ledcAttachPin(TFT_BL, 0);
+
+  pinMode(TFT_BL, OUTPUT);
+  gpio_hold_dis((gpio_num_t)TFT_BL); 
+  ledcWrite(0, brightness);
+
+  // digitalWrite(TFT_BL, HIGH);    
 
   // digitalWrite(GPIO_NUM_16, LOW);    
 /*
@@ -1355,16 +1389,6 @@ void setup()
   lv_scr_load(screenMain);
 
   chessBoard.updateLiftedPiecesString();
-  if (chessBoard.liftedIdx == 0)
-  {
-    lv_label_set_text(debugLbl, "");
-    lv_label_set_text(liftedPiecesStringLbl, "");
-  }
-  else
-  {
-    lv_label_set_text_fmt(debugLbl, "Lifted: %i", chessBoard.liftedIdx);
-    lv_label_set_text(liftedPiecesStringLbl, chessBoard.liftedPiecesDisplayString);
-  }
 
   // chessBoard.printDebugMessage();
 }
