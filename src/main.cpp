@@ -17,6 +17,9 @@
     along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#define VERSION     "Open Mephisto 1.0"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 18th, 2021"
+
 #include <Arduino.h>
 #include <SPIFFS.h>
 #include <esp_sleep.h>
@@ -96,7 +99,7 @@ lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB;
-lv_obj_t *square[64], *dummy1Btn, *dummy2Btn;
+lv_obj_t *square[64], *dummy1Btn, *dummy2Btn, *aboutBox, *object;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void assembleIncomingChesslinkMessage(char readChar)
@@ -775,31 +778,45 @@ static void event_handler(lv_event_t *e)
   lv_obj_t *obj = lv_event_get_target(e);
   if (code == LV_EVENT_CLICKED)
   {
-    // debugPrintln("LV-EVENT-CLICKED");
+    // lv_label_set_text_fmt(debugLbl, "event-clicked");
+
+    int clickedBoard = 0;
+    for (int i = 0; i < 64; i++)
+    {
+      if (obj == square[i])
+      {
+        clickedBoard ++;
+      }
+    }
+    if(clickedBoard>0) 
+    {
+      aboutBox = lv_msgbox_create(screenMain, VERSION, ABOUT_TEXT, NULL, true);
+
+      lv_obj_add_style(aboutBox, &fLargeStyle, 0);
+      lv_obj_set_size(aboutBox, 360, 190);
+      lv_obj_center(aboutBox);
+    }
     if (obj == dummy1Btn)
     {
       brightness+=10;
       if (brightness > 255) brightness = 255;
       ledcWrite(0, (uint8_t)brightness);
-      lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
+      // lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
     }
     if (obj == dummy2Btn)
     {
       brightness-=10;
       if (brightness < 165) brightness = 165;
       ledcWrite(0, (uint8_t)brightness);
-      lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
+      // lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
     }
     
     if (obj == offBtn)
     {
-      // lv_scr_load(screenMain);
-      // lv_task_handler();
-
       saveBoardSettings();
 
-      tft.writecommand(0x10);       // ILI9486 TFT Display Sleep mode on
-      // tft.writecommand(0x28);       // ILI9486 TFT Display Off
+      tft.writecommand(0x10);       // TFT Display Sleep mode on
+      // tft.writecommand(0x28);       // TFT Display Off
 
       // pinMode(GPIO_NUM_16, OUTPUT);
       ledcDetachPin(TFT_BL);
@@ -807,52 +824,8 @@ static void event_handler(lv_event_t *e)
 
       delay(1000);
 
-      // gpio_hold_en(GPIO_NUM_16); // keep TFT_LED off while in deep sleep
-      // pinMode(POWER_SAVE_PIN, OUTPUT);
-      // digitalWrite(POWER_SAVE_PIN, LOW);     // Switch off backlight, somehow does not work with ILI9488 Display???
-      // gpio_hold_en(POWER_SAVE_PIN); // keep TFT_LED off while in deep sleep
-
-// Testing:
-      // pinMode(GPIO_NUM_18, INPUT_PULLUP);
-      // pinMode(GPIO_NUM_19, INPUT_PULLUP);
-      // pinMode(GPIO_NUM_23, INPUT_PULLUP);
-      // pinMode(GPIO_NUM_5, INPUT_PULLUP);
-      // pinMode(GPIO_NUM_0, INPUT_PULLUP);
-      // pinMode(GPIO_NUM_4, INPUT_PULLUP);
-      // pinMode(GPIO_NUM_2, INPUT_PULLUP);
-      // pinMode(GPIO_NUM_15, INPUT_PULLUP);
-
-      // rtc_gpio_isolate(GPIO_NUM_0);      
-      // rtc_gpio_isolate(GPIO_NUM_4);      
-      // rtc_gpio_isolate(GPIO_NUM_2);      
-      // rtc_gpio_isolate(GPIO_NUM_5);      
-      // rtc_gpio_isolate(TOUCH_PANEL_IRQ_PIN);      
-
-      // rtc_gpio_isolate(GPIO_NUM_33);      
-      // rtc_gpio_isolate(GPIO_NUM_32);      
-      // rtc_gpio_isolate(GPIO_NUM_26);      
-      // rtc_gpio_isolate(GPIO_NUM_25);      
-      // rtc_gpio_isolate(GPIO_NUM_14);      
-      // rtc_gpio_isolate(GPIO_NUM_27);      
-      // rtc_gpio_isolate(GPIO_NUM_13);      
-      // rtc_gpio_isolate(GPIO_NUM_12);      
-
-      // digitalWrite(GPIO_NUM_0, LOW);
-      // digitalWrite(GPIO_NUM_4, LOW);
-      // digitalWrite(GPIO_NUM_2, LOW);
-      // digitalWrite(GPIO_NUM_5, HIGH);
-      // digitalWrite(GPIO_NUM_21, LOW);
-
-      // gpio_hold_en(GPIO_NUM_0);
-      // gpio_hold_en(GPIO_NUM_4);
-      // gpio_hold_en(GPIO_NUM_2);
-      // gpio_hold_en(GPIO_NUM_5);
-      // gpio_hold_en(GPIO_NUM_21);
-
       esp_sleep_enable_ext0_wakeup(TOUCH_PANEL_IRQ_PIN, LOW);
-      // touchAttachInterrupt(T0, callback, 40);
-      // esp_sleep_enable_touchpad_wakeup();
-      // adc1_ulp_enable();
+
       gpio_deep_sleep_hold_en();
       esp_deep_sleep_start();
     }
@@ -1037,7 +1010,6 @@ void createSettingsScreen()
   lv_obj_set_flex_align(content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
   lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
-  lv_obj_t *object;
   lv_obj_t *label;
 
   object = lv_label_create(cont_header);
@@ -1122,14 +1094,6 @@ void createSettingsScreen()
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
-  dummy1Btn = lv_btn_create(content);
-  label = lv_label_create(dummy1Btn);
-  lv_label_set_text(label, "Brighter");
-  lv_obj_add_event_cb(dummy1Btn, event_handler, LV_EVENT_ALL, NULL);
-  lv_obj_set_size(dummy1Btn, 160, 40);
-  lv_obj_center(label);
-  lv_obj_add_style(label, &fMediumStyle, 0);
-
   restartBtn = lv_btn_create(content);
   label = lv_label_create(restartBtn);
   lv_label_set_text(label, "Restart");
@@ -1146,6 +1110,14 @@ void createSettingsScreen()
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
+  dummy1Btn = lv_btn_create(content);
+  label = lv_label_create(dummy1Btn);
+  lv_label_set_text(label, "Brighter");
+  lv_obj_add_event_cb(dummy1Btn, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_set_size(dummy1Btn, 160, 40);
+  lv_obj_center(label);
+  lv_obj_add_style(label, &fMediumStyle, 0);
+
   exitSettingsBtn = lv_btn_create(content);
   label = lv_label_create(exitSettingsBtn);
   lv_obj_add_event_cb(exitSettingsBtn, event_handler, LV_EVENT_ALL, NULL);
@@ -1153,6 +1125,7 @@ void createSettingsScreen()
   lv_obj_set_size(exitSettingsBtn, 160, 40);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
+
 }
 
 void createUI()
@@ -1166,15 +1139,15 @@ void createUI()
   lv_style_set_text_font(&fMediumStyle, &lv_font_montserrat_18);
     
   lv_style_init(&fLargeStyle);
-  lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_24);
+  lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);
     
-  liftedPiecesLbl = lv_label_create(screenMain);
-  // lv_label_set_long_mode(liftedPiecesLbl, LV_LABEL_LONG_WRAP);
-  lv_label_set_text(liftedPiecesLbl, "Chesstimation");
-  lv_obj_set_style_text_align(liftedPiecesLbl, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_obj_set_size(liftedPiecesLbl, 135, 40);
-  lv_obj_set_pos(liftedPiecesLbl, 330, 10);
-  lv_obj_add_style(liftedPiecesLbl, &fMediumStyle, 0);  
+  object = lv_label_create(screenMain);
+  lv_label_set_text(object, "Open Mephisto");
+  lv_obj_set_style_text_align(object, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_set_size(object, 150, 40);
+  lv_obj_set_pos(object, 325, 10);
+  lv_label_set_long_mode(object, LV_LABEL_LONG_WRAP);
+  lv_obj_add_style(object, &fMediumStyle, 0);  
   
   #ifdef LOLIN_D32
   batteryLbl = lv_label_create(screenMain);
@@ -1186,7 +1159,6 @@ void createUI()
   #endif
   
   liftedPiecesStringLbl = lv_label_create(screenMain);
-  lv_label_set_long_mode(liftedPiecesLbl, LV_LABEL_LONG_WRAP);
   lv_label_set_text(liftedPiecesStringLbl, "ready");
   lv_obj_set_style_text_align(liftedPiecesStringLbl, LV_TEXT_ALIGN_LEFT, 0);
   lv_obj_set_size(liftedPiecesStringLbl, 135, 160);
@@ -1194,7 +1166,6 @@ void createUI()
   lv_obj_add_style(liftedPiecesStringLbl, &fLargeStyle, 0);    // was f28Style    
   
   debugLbl = lv_label_create(screenMain);
-  // lv_label_set_long_mode(liftedPiecesLbl, LV_LABEL_LONG_WRAP);
   lv_label_set_text(debugLbl, "");
   lv_obj_set_style_text_align(debugLbl, LV_TEXT_ALIGN_RIGHT, 0);
   lv_obj_set_size(debugLbl, 135, 40);
@@ -1209,6 +1180,7 @@ void createUI()
   lv_obj_t * label1 = lv_label_create(settingsBtn);
   lv_label_set_text(label1, "Settings");
   lv_obj_set_align(label1, LV_ALIGN_CENTER);
+  lv_obj_add_style(settingsBtn, &fMediumStyle, 0);
 
   // // labelA1 = lv_label_create(screenMain);
   // // lv_label_set_text(labelA1, LV_SYMBOL_BATTERY_FULL);
@@ -1227,8 +1199,6 @@ void createUI()
   lv_style_set_bg_opa(&light_square, LV_OPA_COVER);
   lv_style_set_border_width(&light_square, 0);
 
-  lv_obj_add_style(settingsBtn, &fMediumStyle, 0);
-
   // Create Chessboard
 
   int i;
@@ -1238,6 +1208,7 @@ void createUI()
     square[i] = lv_obj_create(screenMain);
     lv_obj_set_size(square[i], SQUARE_SIZE, SQUARE_SIZE);
     lv_obj_set_pos(square[i], getColFromBoardIndex(i) * SQUARE_SIZE, (getRowFromBoardIndex(i)) * SQUARE_SIZE);
+    lv_obj_add_event_cb(square[i], event_handler, LV_EVENT_ALL, NULL);
         
     if ((0xAA55AA55 >> i) & 1)  // taken from chess programming wiki to find out which one is a light and dark square!
     { 

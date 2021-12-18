@@ -417,7 +417,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 
 #define LV_USE_BTN        1
 
-#define LV_USE_BTNMATRIX  0
+#define LV_USE_BTNMATRIX  1
 
 #define LV_USE_CANVAS     1
 
@@ -486,7 +486,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 
 #define LV_USE_METER      0
 
-#define LV_USE_MSGBOX     0
+#define LV_USE_MSGBOX     1
 
 #define LV_USE_SPINBOX    0
 
