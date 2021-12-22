@@ -311,8 +311,8 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 #define LV_FONT_MONTSERRAT_20 1
 #define LV_FONT_MONTSERRAT_22 1
 #define LV_FONT_MONTSERRAT_24 1
-#define LV_FONT_MONTSERRAT_26 0
-#define LV_FONT_MONTSERRAT_28 0
+#define LV_FONT_MONTSERRAT_26 1
+#define LV_FONT_MONTSERRAT_28 1
 #define LV_FONT_MONTSERRAT_30 0
 #define LV_FONT_MONTSERRAT_32 0
 #define LV_FONT_MONTSERRAT_34 0
@@ -440,7 +440,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 #  define LV_ROLLER_INF_PAGES 7 /*Number of extra "pages" when the roller is infinite*/
 #endif
 
-#define LV_USE_SLIDER     0   /*Requires: lv_bar*/
+#define LV_USE_SLIDER     1   /*Requires: lv_bar*/
 
 #define LV_USE_SWITCH     0
 

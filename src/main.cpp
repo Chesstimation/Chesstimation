@@ -18,7 +18,7 @@
 */
 
 #define VERSION     "Open Mephisto 1.0"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 18th, 2021"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 22th, 2021"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -40,7 +40,7 @@
 
 #include "../lvgl/src/lvgl.h"
 
-#define LOLIN_D32
+// #define LOLIN_D32
 #define LED_TIME 300
 
 #define TOUCH_PANEL_IRQ_PIN   GPIO_NUM_34   // The idea is to check if there is a signal change on this pin for waking ESP32 from sleep! Works! Pin is high when no touch, low when touch!
@@ -78,6 +78,7 @@ static lv_color_t buf[DISP_BUF_SIZE];
 
 static lv_style_t fMediumStyle;
 static lv_style_t fLargeStyle;
+static lv_style_t fExtraLargeStyle;
 static lv_style_t light_square;
 static lv_style_t dark_square;
 
@@ -99,7 +100,7 @@ lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB;
-lv_obj_t *square[64], *dummy1Btn, *dummy2Btn, *aboutBox, *object;
+lv_obj_t *square[64], *dummy1Btn, *dummy2Btn, *object;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void assembleIncomingChesslinkMessage(char readChar)
@@ -122,6 +123,16 @@ void assembleIncomingChesslinkMessage(char readChar)
     incomingMessage[position + 1] = 0;
     break;
   }
+}
+
+void displayAboutBox()
+{
+  object = lv_msgbox_create(screenMain, VERSION, ABOUT_TEXT, NULL, true);
+
+  lv_obj_add_style(object, &fLargeStyle, 0);
+  lv_obj_set_size(object, 420, 210);
+  lv_obj_center(object);
+  lv_obj_clear_flag(object, LV_OBJ_FLAG_SCROLLABLE);
 }
 
 byte debugPrint(const char *message)
@@ -790,11 +801,7 @@ static void event_handler(lv_event_t *e)
     }
     if(clickedBoard>0) 
     {
-      aboutBox = lv_msgbox_create(screenMain, VERSION, ABOUT_TEXT, NULL, true);
-
-      lv_obj_add_style(aboutBox, &fLargeStyle, 0);
-      lv_obj_set_size(aboutBox, 360, 190);
-      lv_obj_center(aboutBox);
+      displayAboutBox();
     }
     if (obj == dummy1Btn)
     {
@@ -1015,7 +1022,7 @@ void createSettingsScreen()
   object = lv_label_create(cont_header);
   lv_label_set_text(object, "Settings");
   lv_obj_center(object);
-  lv_obj_add_style(object, &fLargeStyle, 0);   // was f28Style
+  lv_obj_add_style(object, &fExtraLargeStyle, 0);   // was f28Style
 
   object = lv_label_create(content);
   lv_label_set_text(object, "Emulation:");
@@ -1140,6 +1147,9 @@ void createUI()
     
   lv_style_init(&fLargeStyle);
   lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);
+    
+  lv_style_init(&fExtraLargeStyle);
+  lv_style_set_text_font(&fExtraLargeStyle, &lv_font_montserrat_28);
     
   object = lv_label_create(screenMain);
   lv_label_set_text(object, "Open Mephisto");

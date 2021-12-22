@@ -1,32 +1,161 @@
 # Open Mephisto
 
-This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modular chess computer (Modular, Exclusive or München Board) to a computer.
-To be able to use existing software on the (Windows-) Computer, a Certabo or a Millennium (Chesslink) board can be simulated.
-Also the board can be connected to an iPhone using the White Pawn app (https://khadimfall.com/p/white-pawn) via Bluetooth Low Energy (BLE).
+This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modular chess computer (Modular, Exclusive or München Board) to a computer or a smart phone.
 
-# Following hardware components are required:
-1. Wemos LolinD32 or similar (sufficient number of GPIO pins is required, 12 pins for Mephisto board control + approx. 8 pins for touch display)
-2. 40-pin edge card connector (Sullins Connector Solutions EBC20DRAS or EDAC Inc. 395-040-558-301 or Aliexpress: https://de.aliexpress.com/item/33035971298.html)
-3. Rainbow Ribbon Cable with 1.27mm spacing, e.g. from Aliexpress: https://de.aliexpress.com/item/1005003002882947.html
+## Main Features:
+
+* 3.5" Color-TFT (480x320 Pixels), available space is perfectly used.
+* Current position is shown on the display.
+* Both White and Black can be played from the front.
+* All opponent's moves are displayed via the board's LEDs.
+* Power supply via built-in battery that can be charged via USB-C. 
+* Communication with PC via USB-C or Bluetooth Classic, to iPhone via BLE (Bluetooth Low Energy).
+* Playing completely without cables is possible!
+* All settings and the board position are not lost when the device is switched off!
+* Switching on and off takes less than 2 seconds.
+* Certabo or Millennium Chesslink can be selected as emulation, making it compatible with many chess programmes:
+  * "White Pawn" on iPhone (https://khadimfall.com/p/white-pawn)
+  * BearChess (http://www.solanosoft.com/index.php?page=bearchess)
+  * original Certabo Software (https://www.certabo.com/)
+  * Lucas Chess (https://lucaschess.pythonanywhere.com/index?lang=en)
+  * and via Graham's DLLs (https://goneill.co.nz/chess.php) actually all software that can handle DGT boards.
+
+## Limitations:
+
+* Pawn promotion currently to queen only.
+* Captured piece needs to be removed from board before capturing piece is put to the square. 
+* Must not be combined with other modules or power supplies.
+
+## Following hardware components are required:
+1. Wemos LolinD32 (https://de.aliexpress.com/item/32808551116.html)
+2. 40-pin edge card connector, e.g. https://de.aliexpress.com/item/33035971298.html (you need to select 2x20 Pin)
+3. Rainbow Ribbon Cable with 1.27mm spacing, e.g. from Aliexpress: https://de.aliexpress.com/item/1005003002882947.html (you need to select 1.27mm spacing!)
 4. 3.5 inch Waveshare TFT Pico Res Touch display: https://www.waveshare.com/pico-restouch-lcd-3.5.htm (fits perfectly into one Mephisto module slot!)
 5. optionally lipo battery with plug for Lolin D32
 
-# How to connect the 40-pin plug to the Mephisto board?
+## How to connect the 40-pin plug to the Mephisto board?
 
 If you look at the chessboard or module from the front, the upper row of contacts is numbered from left to right from 1 to 39, the lower row from 2 to 40.
-However, there seem to be connectors where the odd (top) and even (bottom) contacts are swapped!
+With the ribbon cable connector as linked above the wires are numbered a bit different, from left to right: 2,1, 4,3, 6,5, 8,7, ... 40,39.
+This has already been considered in below table and you will be able to connect the 8 data wires just in parallel to the Lolin D32.
 
-Only 14 pins are required to be able to light the LEDs and read out the reed switches from the chessboard:
-* D0-D7 are pins 15 to 22
-* LDC_EN is pin 29
-* CB_EN  is pin 30
-* ROW_LE is pin 31
-* LDC_LE is pin 32
+ <table>
+  <tr>
+    <th>40-pin Connector Pin</th>
+    <th>LolinD32 Pin</th>
+  </tr>
+  <tr>
+    <td>1+2</td>
+    <td>3.3V</td>
+  </tr>
+  <tr>
+    <td>39+40</td>
+    <td>GND</td>
+  </tr>
+  <tr>
+    <td>15 / D0</td>
+    <td>GPIO 33</td>
+  </tr>
+  <tr>
+    <td>16 / D1</td>
+    <td>GPIO 32</td>
+  </tr>
+  <tr>
+    <td>17 / D2</td>
+    <td>GPIO 26</td>
+  </tr>
+  <tr>
+    <td>18 / D3</td>
+    <td>GPIO 25</td>
+  </tr>
+  <tr>
+    <td>19 / D4</td>
+    <td>GPIO 14</td>
+  </tr>
+  <tr>
+    <td>20 / D5</td>
+    <td>GPIO 27</td>
+  </tr>
+  <tr>
+    <td>21 / D6</td>
+    <td>GPIO 13</td>
+  </tr>
+  <tr>
+    <td>22 / D7</td>
+    <td>GPIO 12</td>
+  </tr>
+  <tr>
+    <td>29 / LDC_EN</td>
+    <td>GPIO 0</td>
+  </tr>
+  <tr>
+    <td>30 / CB_EN</td>
+    <td>GPIO 4</td>
+  </tr>
+  <tr>
+    <td>31 / ROW_LE</td>
+    <td>GPIO 15</td>
+  </tr>
+  <tr>
+    <td>32 / LDC_LE</td>
+    <td>GPIO 2</td>
+  </tr>
+</table> 
 
-* VCC is pin 1 and pin 2 (both 5V and 3.3V are working for me, ESP32 CANNOT BE DRIVEN WITH 5V!)
-* GND is pin 39 and pin 40
+## How to connect the 3.5" display to Lolin D32
 
-# Software development environment
+ <table>
+  <tr>
+    <th>TFT Display Pin</th>
+    <th>LolinD32 Pin</th>
+  </tr>
+  <tr>
+    <td>VSYS</td>
+    <td>3.3V</td>
+  </tr>
+  <tr>
+    <td>GND</td>
+    <td>GND</td>
+  </tr>
+  <tr>
+    <td>LCD_DC</td>
+    <td>GPIO 17</td>
+  </tr>
+  <tr>
+    <td>LCD_CS</td>
+    <td>SS/GPIO 5</td>
+  </tr>
+  <tr>
+    <td>CLK</td>
+    <td>SCK/GPIO 18</td>
+  </tr>
+  <tr>
+    <td>MOSI</td>
+    <td>MOSI/GPIO 23</td>
+  </tr>
+  <tr>
+    <td>MISO</td>
+    <td>MISO/GPIO 19</td>
+  </tr>
+  <tr>
+    <td>LCD_BL</td>
+    <td>GPIO 16</td>
+  </tr>
+  <tr>
+    <td>LCD_RST</td>
+    <td>RESET</td>
+  </tr>
+  <tr>
+    <td>TP_CS</td>
+    <td>GPIO 21</td>
+  </tr>
+  <tr>
+    <td>TP_IRQ</td>
+    <td>GPIO 34</td>
+  </tr>
+</table> 
+
+## Software development environment
 
 Software development is done in C++ using:
 * Visual Studio Code
