@@ -18,7 +18,7 @@
 */
 
 #define VERSION     "Open Mephisto 1.0"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 22th, 2021"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 23th, 2021"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -40,7 +40,7 @@
 
 #include "../lvgl/src/lvgl.h"
 
-// #define LOLIN_D32
+#define LOLIN_D32
 #define LED_TIME 300
 
 #define TOUCH_PANEL_IRQ_PIN   GPIO_NUM_34   // The idea is to check if there is a signal change on this pin for waking ESP32 from sleep! Works! Pin is high when no touch, low when touch!
@@ -62,6 +62,8 @@ byte eeprom[5]={0,20,3,20,15};
 byte oldBoard[64];
 int brightness = 255;
 
+uint16_t calibrationData[5];
+
 //BLE objects
 BLEServer *pServer = NULL;
 BLECharacteristic *pTxCharacteristic;
@@ -72,7 +74,7 @@ std::string replyString;
 
 TFT_eSPI tft = TFT_eSPI();
 
-#define DISP_BUF_SIZE (480 * 48)
+#define DISP_BUF_SIZE (480 * 40)
 static lv_disp_draw_buf_t disp_buf; //LVGL stuff;
 static lv_color_t buf[DISP_BUF_SIZE];
 
@@ -100,7 +102,7 @@ lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB;
-lv_obj_t *square[64], *dummy1Btn, *dummy2Btn, *object;
+lv_obj_t *square[64], *dummy1Btn, *dummy2Btn, *object, *brightnessSlider;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void assembleIncomingChesslinkMessage(char readChar)
@@ -129,8 +131,8 @@ void displayAboutBox()
 {
   object = lv_msgbox_create(screenMain, VERSION, ABOUT_TEXT, NULL, true);
 
-  lv_obj_add_style(object, &fLargeStyle, 0);
-  lv_obj_set_size(object, 420, 210);
+  lv_obj_add_style(object, &fExtraLargeStyle, 0);
+  lv_obj_set_size(object, 455, 230);
   lv_obj_center(object);
   lv_obj_clear_flag(object, LV_OBJ_FLAG_SCROLLABLE);
 }
@@ -148,6 +150,23 @@ byte debugPrint(const char *message)
     return 1;
   }
   return 0;
+}
+
+void startTouchCalibration()
+{
+    // object = lv_msgbox_create(NULL, "Touch Calibration", "Touch the corners with the white line\nin counter clockwise order", NULL, true);
+
+    // lv_obj_add_style(object, &fLargeStyle, 0);
+    // lv_obj_set_size(object, 480, 320);
+    // lv_obj_center(object);
+    // lv_obj_clear_flag(object, LV_OBJ_FLAG_SCROLLABLE);
+
+    tft.calibrateTouch(calibrationData, TFT_WHITE, TFT_RED, 15);
+    tft.fillRect(480-16, 320-16, 16, 16, TFT_RED);
+
+    lv_obj_invalidate(settingsScreen);
+
+    // lv_obj_add_flag(object, LV_OBJ_FLAG_HIDDEN);
 }
 
 byte debugPrintln(const char *message)
@@ -783,10 +802,19 @@ void updatePiecesOnBoard()
   }
 }
 
+static void slider_event_cb(lv_event_t *e)
+{
+  lv_obj_t *slider = lv_event_get_target(e);
+  brightness = lv_slider_get_value(slider);
+  ledcWrite(0, (uint8_t)brightness);
+  // lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
+}
+
 static void event_handler(lv_event_t *e)
 {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
+
   if (code == LV_EVENT_CLICKED)
   {
     // lv_label_set_text_fmt(debugLbl, "event-clicked");
@@ -803,19 +831,9 @@ static void event_handler(lv_event_t *e)
     {
       displayAboutBox();
     }
-    if (obj == dummy1Btn)
-    {
-      brightness+=10;
-      if (brightness > 255) brightness = 255;
-      ledcWrite(0, (uint8_t)brightness);
-      // lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
-    }
     if (obj == dummy2Btn)
     {
-      brightness-=10;
-      if (brightness < 165) brightness = 165;
-      ledcWrite(0, (uint8_t)brightness);
-      // lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
+      startTouchCalibration();
     }
     
     if (obj == offBtn)
@@ -856,20 +874,6 @@ static void event_handler(lv_event_t *e)
       lv_scr_load(screenMain);
     }
   }
-  if (code == LV_EVENT_DRAW_MAIN)
-  {
-    // debugPrintln("LV_EVENT_DRAW_MAIN event!");
-    // if (obj == chessBoard)
-    // {
-    //   lv_draw_rect_dsc_t rect_dsc;
-    //   lv_draw_rect_dsc_init(&rect_dsc);
-    //   rect_dsc.radius = 5;
-    //   rect_dsc.bg_color = lv_palette_main(LV_PALETTE_RED);
-    //   lv_area_t area;
-    //   lv_area_set(&area, 40, 40, 79, 79);
-    //   lv_draw_rect(&obj->coords, &area, &rect_dsc);
-    // }
-  }
   if (code == LV_EVENT_VALUE_CHANGED)
   {
     if (obj == usbCB)
@@ -877,7 +881,6 @@ static void event_handler(lv_event_t *e)
       if ((lv_obj_get_state(usbCB) & LV_STATE_CHECKED) == 1)
       {
         connection = USB;
-        // initSerialPortCommunication();
       }
     }
     if (obj == bleCB)
@@ -885,7 +888,6 @@ static void event_handler(lv_event_t *e)
       if ((lv_obj_get_state(bleCB) & LV_STATE_CHECKED) == 1)
       {
         connection = BLE;
-        // initSerialPortCommunication();
       }
     }
     if (obj == btCB)
@@ -893,7 +895,6 @@ static void event_handler(lv_event_t *e)
       if ((lv_obj_get_state(btCB) & LV_STATE_CHECKED) == 1)
       {
         connection = BT;
-        // initSerialPortCommunication();
       }
     }
     if (obj == certaboCB)
@@ -901,7 +902,6 @@ static void event_handler(lv_event_t *e)
       if ((lv_obj_get_state(certaboCB) & LV_STATE_CHECKED) == 1)
       {
         chessBoard.emulation = 0;
-        // initSerialPortCommunication();
       }
     }
     if (obj == chesslinkCB)
@@ -909,7 +909,6 @@ static void event_handler(lv_event_t *e)
       if ((lv_obj_get_state(chesslinkCB) & LV_STATE_CHECKED) == 1)
       {
         chessBoard.emulation = 1;
-        // initSerialPortCommunication();
       }
     }
     if (obj == flippedCB)
@@ -1014,7 +1013,8 @@ void createSettingsScreen()
   lv_obj_align_to(content, cont_header, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
   lv_obj_set_style_border_width(content, 0, 0);
   lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN_WRAP);
-  lv_obj_set_flex_align(content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+  lv_obj_set_flex_align(content, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_SPACE_AROUND);
+  // lv_obj_set_flex_align(content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
   lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
   lv_obj_t *label;
@@ -1097,7 +1097,7 @@ void createSettingsScreen()
   label = lv_label_create(offBtn);
   lv_obj_add_event_cb(offBtn, event_handler, LV_EVENT_ALL, NULL);
   lv_label_set_text(label, "Switch Off");
-  lv_obj_set_size(offBtn, 160, 40);
+  lv_obj_set_size(offBtn, 180, 35);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
@@ -1105,31 +1105,61 @@ void createSettingsScreen()
   label = lv_label_create(restartBtn);
   lv_label_set_text(label, "Restart");
   lv_obj_add_event_cb(restartBtn, event_handler, LV_EVENT_ALL, NULL);
-  lv_obj_set_size(restartBtn, 160, 40);
+  lv_obj_set_size(restartBtn, 180, 35);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
+
+  /*Create a container for Brightness Slider */
+  object = lv_obj_create(content);
+  lv_obj_set_size(object, 180, 55);
+  lv_obj_set_style_radius(object, 0, 0);
+  lv_obj_set_style_border_width(object, 0, 0);
+  lv_obj_set_flex_flow(object, LV_FLEX_FLOW_COLUMN);
+  lv_obj_set_style_pad_left(object, 10, 0);
+  lv_obj_set_style_pad_right(object, 10, 0);
+  lv_obj_set_style_pad_top(object, 0, 0);
+  lv_obj_set_style_pad_bottom(object, 5, 0);
+  lv_obj_align_to(object, content, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_clear_flag(object, LV_OBJ_FLAG_SCROLLABLE);
+
+  label = lv_label_create(object);
+  // lv_obj_set_size(label, 160, 10);
+  // lv_obj_center(label);
+  lv_label_set_text(label, "Brightness:");
+
+  lv_obj_t *brightnessSlider = lv_slider_create(object);
+  lv_obj_set_size(brightnessSlider, 160, 10);
+  // lv_obj_set_style_pad_left(brightnessSlider, 5, 0);
+
+#ifdef PicoResTouchLCD_35
+  lv_slider_set_range(brightnessSlider, 155, 255);
+#else
+  lv_slider_set_range(brightnessSlider, 5, 255);
+#endif
+  lv_slider_set_value(brightnessSlider, 255, LV_ANIM_ON);
+  lv_obj_add_event_cb(brightnessSlider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
   dummy2Btn = lv_btn_create(content);
   label = lv_label_create(dummy2Btn);
-  lv_label_set_text(label, "Darker");
+  lv_label_set_text(label, "Calibrate Touch");
   lv_obj_add_event_cb(dummy2Btn, event_handler, LV_EVENT_ALL, NULL);
-  lv_obj_set_size(dummy2Btn, 160, 40);
+  lv_obj_set_size(dummy2Btn, 180, 35);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
-  dummy1Btn = lv_btn_create(content);
-  label = lv_label_create(dummy1Btn);
-  lv_label_set_text(label, "Brighter");
-  lv_obj_add_event_cb(dummy1Btn, event_handler, LV_EVENT_ALL, NULL);
-  lv_obj_set_size(dummy1Btn, 160, 40);
-  lv_obj_center(label);
-  lv_obj_add_style(label, &fMediumStyle, 0);
+  // dummy1Btn = lv_btn_create(content);
+  // label = lv_label_create(dummy1Btn);
+  // lv_label_set_text(label, "Brighter");
+  // lv_obj_add_event_cb(dummy1Btn, event_handler, LV_EVENT_ALL, NULL);
+  // lv_obj_set_size(dummy1Btn, 160, 40);
+  // lv_obj_center(label);
+  // lv_obj_add_style(label, &fMediumStyle, 0);
 
   exitSettingsBtn = lv_btn_create(content);
   label = lv_label_create(exitSettingsBtn);
   lv_obj_add_event_cb(exitSettingsBtn, event_handler, LV_EVENT_ALL, NULL);
   lv_label_set_text(label, "Back");
-  lv_obj_set_size(exitSettingsBtn, 160, 40);
+  lv_obj_set_size(exitSettingsBtn, 180, 35);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
@@ -1146,10 +1176,10 @@ void createUI()
   lv_style_set_text_font(&fMediumStyle, &lv_font_montserrat_18);
     
   lv_style_init(&fLargeStyle);
-  lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);
+  lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);  // was 22
     
   lv_style_init(&fExtraLargeStyle);
-  lv_style_set_text_font(&fExtraLargeStyle, &lv_font_montserrat_28);
+  lv_style_set_text_font(&fExtraLargeStyle, &lv_font_montserrat_28); // was 28
     
   object = lv_label_create(screenMain);
   lv_label_set_text(object, "Open Mephisto");
