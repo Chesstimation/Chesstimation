@@ -44,7 +44,6 @@
 #define LED_TIME 300
 
 #define TOUCH_PANEL_IRQ_PIN   GPIO_NUM_34   // The idea is to check if there is a signal change on this pin for waking ESP32 from sleep! Works! Pin is high when no touch, low when touch!
-#define POWER_SAVE_PIN        GPIO_NUM_22 //
 
 #define BOARD_SETUP_FILE  "/board_setup"
 #define SQUARE_SIZE         40
