@@ -26,12 +26,6 @@ This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modul
 * Captured piece needs to be removed from board before capturing piece is put to the square. 
 * Must not be combined with other modules or power supplies.
 
-## Donation:
-
-If you like this project, I would be happy to receive a donation. 
-
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](andreas.petersik@gmail.com)
-
 ## Following hardware components are required:
 1. Wemos LolinD32 (https://de.aliexpress.com/item/32808551116.html)
 2. 40-pin edge card connector, e.g. https://de.aliexpress.com/item/33035971298.html (you need to select 2x20 Pin)
