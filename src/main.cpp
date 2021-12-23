@@ -102,7 +102,7 @@ lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB;
-lv_obj_t *square[64], *dummy1Btn, *dummy2Btn, *object, *brightnessSlider;
+lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void assembleIncomingChesslinkMessage(char readChar)
@@ -186,10 +186,21 @@ byte debugPrintln(const char *message)
 
 void saveBoardSettings(void)
 {
+  connectionType saveConnection = USB;
+
   if (!SPIFFS.begin())
   {
     SPIFFS.format();
     SPIFFS.begin();
+  }
+
+  if ((lv_obj_get_state(bleCB) & LV_STATE_CHECKED) == 1 && chessBoard.emulation == 1)
+  {
+    saveConnection = BLE;
+  }
+  if ((lv_obj_get_state(btCB) & LV_STATE_CHECKED) == 1)
+  {
+    saveConnection = BT;
   }
 
   // store data
@@ -201,7 +212,7 @@ void saveBoardSettings(void)
     f.write(chessBoard.liftedIdx);
     f.write(chessBoard.emulation);
     f.write(chessBoard.flipped);
-    f.write(connection);
+    f.write(saveConnection);
     f.close();
   }
 }
@@ -339,24 +350,6 @@ void updateSettingsScreen()
   if(!chessBoard.flipped) 
   {
     lv_obj_clear_state(flippedCB, LV_STATE_CHECKED);
-  }
-  if(connection == USB)
-  {
-    lv_obj_add_state(usbCB, LV_STATE_CHECKED);
-    lv_obj_clear_state(btCB, LV_STATE_CHECKED);
-    lv_obj_clear_state(bleCB, LV_STATE_CHECKED);
-  }
-  if(connection == BT)
-  {
-    lv_obj_clear_state(usbCB, LV_STATE_CHECKED);
-    lv_obj_add_state(btCB, LV_STATE_CHECKED);
-    lv_obj_clear_state(bleCB, LV_STATE_CHECKED);
-  }
-  if(connection == BLE)
-  {
-    lv_obj_clear_state(usbCB, LV_STATE_CHECKED);
-    lv_obj_clear_state(btCB, LV_STATE_CHECKED);
-    lv_obj_add_state(bleCB, LV_STATE_CHECKED);
   }
 }
 
@@ -831,7 +824,7 @@ static void event_handler(lv_event_t *e)
     {
       displayAboutBox();
     }
-    if (obj == dummy2Btn)
+    if (obj == calibrateBtn)
     {
       startTouchCalibration();
     }
@@ -880,21 +873,24 @@ static void event_handler(lv_event_t *e)
     {
       if ((lv_obj_get_state(usbCB) & LV_STATE_CHECKED) == 1)
       {
-        connection = USB;
+        lv_obj_clear_state(btCB, LV_STATE_CHECKED);
+        lv_obj_clear_state(bleCB, LV_STATE_CHECKED);
       }
     }
     if (obj == bleCB)
     {
       if ((lv_obj_get_state(bleCB) & LV_STATE_CHECKED) == 1)
       {
-        connection = BLE;
+        lv_obj_clear_state(usbCB, LV_STATE_CHECKED);
+        lv_obj_clear_state(btCB, LV_STATE_CHECKED);
       }
     }
     if (obj == btCB)
     {
       if ((lv_obj_get_state(btCB) & LV_STATE_CHECKED) == 1)
       {
-        connection = BT;
+        lv_obj_clear_state(usbCB, LV_STATE_CHECKED);
+        lv_obj_clear_state(bleCB, LV_STATE_CHECKED);
       }
     }
     if (obj == certaboCB)
@@ -1118,7 +1114,7 @@ void createSettingsScreen()
   lv_obj_set_style_pad_left(object, 10, 0);
   lv_obj_set_style_pad_right(object, 10, 0);
   lv_obj_set_style_pad_top(object, 0, 0);
-  lv_obj_set_style_pad_bottom(object, 5, 0);
+  lv_obj_set_style_pad_bottom(object, 15, 0);
   lv_obj_align_to(object, content, LV_ALIGN_TOP_MID, 0, 0);
   lv_obj_clear_flag(object, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -1139,19 +1135,11 @@ void createSettingsScreen()
   lv_slider_set_value(brightnessSlider, 255, LV_ANIM_ON);
   lv_obj_add_event_cb(brightnessSlider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
-  dummy2Btn = lv_btn_create(content);
-  label = lv_label_create(dummy2Btn);
-  lv_label_set_text(label, "Calibrate Touch");
-  lv_obj_add_event_cb(dummy2Btn, event_handler, LV_EVENT_ALL, NULL);
-  lv_obj_set_size(dummy2Btn, 180, 35);
-  lv_obj_center(label);
-  lv_obj_add_style(label, &fMediumStyle, 0);
-
-  // dummy1Btn = lv_btn_create(content);
-  // label = lv_label_create(dummy1Btn);
-  // lv_label_set_text(label, "Brighter");
-  // lv_obj_add_event_cb(dummy1Btn, event_handler, LV_EVENT_ALL, NULL);
-  // lv_obj_set_size(dummy1Btn, 160, 40);
+  // calibrateBtn = lv_btn_create(content);
+  // label = lv_label_create(calibrateBtn);
+  // lv_label_set_text(label, "Calibrate Touch");
+  // lv_obj_add_event_cb(calibrateBtn, event_handler, LV_EVENT_ALL, NULL);
+  // lv_obj_set_size(calibrateBtn, 180, 35);
   // lv_obj_center(label);
   // lv_obj_add_style(label, &fMediumStyle, 0);
 
@@ -1379,6 +1367,8 @@ void setup()
   chessBoard.startPosition(0);
   connection = USB;
   loadBoardSettings();
+  // if(chessBoard.emulation == 0 && connection == BLE)
+  //   connection = USB;
   initSerialPortCommunication();
 
   mephisto.initPorts();
@@ -1396,6 +1386,19 @@ void setup()
   createUI();
 
   createSettingsScreen();
+
+  if(connection == USB) 
+  {
+    lv_obj_add_state(usbCB, LV_STATE_CHECKED);
+  }
+  if(connection == BT) 
+  {
+    lv_obj_add_state(btCB, LV_STATE_CHECKED);
+  }
+  if(connection == BLE) 
+  {
+    lv_obj_add_state(bleCB, LV_STATE_CHECKED);
+  }
 
   lv_scr_load(screenMain);
 

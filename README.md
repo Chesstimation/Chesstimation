@@ -29,7 +29,7 @@ This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modul
 ## Following hardware components are required:
 1. Wemos LolinD32 (https://de.aliexpress.com/item/32808551116.html)
 2. 40-pin edge card connector, e.g. https://de.aliexpress.com/item/33035971298.html (you need to select 2x20 Pin)
-3. Rainbow Ribbon Cable with 1.27mm spacing, e.g. from Aliexpress: https://de.aliexpress.com/item/1005003002882947.html (you need to select 1.27mm spacing!)
+3. Rainbow Ribbon Cable (~30cm) with 1.27mm spacing, e.g. from Aliexpress: https://de.aliexpress.com/item/1005003002882947.html (you need to select 1.27mm spacing!)
 4. 3.5 inch Waveshare TFT Pico Res Touch display: https://www.waveshare.com/pico-restouch-lcd-3.5.htm (fits perfectly into one Mephisto module slot!)
 5. optionally lipo battery with plug for Lolin D32
 
