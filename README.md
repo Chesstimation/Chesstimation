@@ -4,16 +4,17 @@ This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modul
 
 ## Main Features:
 
+* No modification to original Mephisto Modular/Exclusive/München board required. Just replace the old modules with the new one!
 * 3.5" Color-TFT (480x320 Pixels), available space is perfectly used.
 * Current position is shown on the display.
 * Both White and Black can be played from the front.
 * All opponent's moves are displayed via the board's LEDs.
-* Power supply via built-in battery that can be charged via USB-C. 
+* Power supply via built-in battery that can be charged via USB-C (with 2200 mAh lipo >7h running time, ~4h charging time). 
 * Communication with PC via USB-C or Bluetooth Classic, to iPhone via BLE (Bluetooth Low Energy).
 * Playing completely without cables is possible!
 * All settings and the board position are not lost when the device is switched off!
 * Switching on and off takes less than 2 seconds.
-* Certabo or Millennium Chesslink can be selected as emulation, making it compatible with many chess programmes:
+* Certabo or Millennium Chesslink can be selected as emulation, making it compatible with many chess programs:
   * "White Pawn" on iPhone (https://khadimfall.com/p/white-pawn)
   * BearChess (http://www.solanosoft.com/index.php?page=bearchess)
   * original Certabo Software (https://www.certabo.com/)
@@ -166,5 +167,9 @@ This has already been considered in below table and you will be able to connect 
 Software development is done in C++ using:
 * Visual Studio Code
 * Platform IO
+
+In Platform IO you need to install 2 additional libraries for this project:
+* LVGL 8.1 (you need to use Open Mephisto's lv_conf.h)
+* TFT eSPI 2.4.11 (you need to use chess-module-display.h as User_Setup.h)
 
 For flashing the firmware to the Lolin D32 without Platform IO I use ESP Flasher: https://github.com/Jason2866/ESP_Flasher/releases

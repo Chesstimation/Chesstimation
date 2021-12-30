@@ -94,7 +94,7 @@ void Board::generateSerialBoardMessage(void) {
     // Certabo
         boardMessage[0] = ':';
         boardMessage[1] = 0;
-        char number[12];
+        char number[13];
 
         for(int i=0; i<64; i++) {
             if (!flipped)
@@ -174,58 +174,35 @@ void Board::printDebugMessage(void) {
 }
 
 char Board::FENpieceFromType(byte piece) {
-    switch(piece) {
-             case BR1:
-             case BR2:
-                return 'r';              
-             case WR1:
-             case WR2:
-                return 'R';              
-             case BN1:
-             case BN2:
-                return 'n';              
-             case WB1:
-             case WB2:
-                return 'B';              
-             case BB1:
-             case BB2:
-                return 'b';              
-             case WN1:
-             case WN2:
-                return 'N';              
-             case WP1:
-             case WP2:
-             case WP3:
-             case WP4:
-             case WP5:
-             case WP6:
-             case WP7:
-             case WP8:
-                return 'P';              
-             case BP1:
-             case BP2:
-             case BP3:
-             case BP4:
-             case BP5:
-             case BP6:
-             case BP7:
-             case BP8:
-                return 'p';              
-             case WQ1:
-             case WQ2:
-                return 'Q';              
-             case BQ1:
-             case BQ2:
-                return 'q';              
-             case WK1:
-                return 'K';              
-             case BK1:
-                return 'k';              
-             case EMP:
-                return '.';              
-             default:
-                return '.';              
-         }
+    char fen;
+    switch(piece & 0b00001110)
+    {
+        case 0b0010:
+            fen = 'P';
+            break;
+        case 0b0100:
+            fen = 'R';
+            break;
+        case 0b0110:
+            fen = 'N';
+            break;
+        case 0b1000:
+            fen = 'B';
+            break;
+        case 0b1010:
+            fen = 'Q';
+            break;
+        case 0b1100:
+            fen = 'K';
+            break;
+        default:
+            return '.';
+    }
+    if((piece & 0x01) == 1)
+    {
+        fen += 32;
+    }
+    return fen;
 }
 
 void Board::updateLiftedPiecesString(void) {
@@ -241,29 +218,15 @@ void Board::updateLiftedPiecesString(void) {
      }
 }
 
-// This seems to be useless!
-// void Board::copyPieceSetupToRaw(byte rawRow[8]) {
-//     for(int row=0; row<8; row++) {
-//         byte curRow = 0;
-//         for(int col=0; col<8; col++) {
-//             curRow<<=1;
-//             if(piece[row*8+col]!=EMP) {
-//                 curRow++;
-//             }
-//         }
-//         rawRow[row]=curRow;
-//     }
-// }
-
 bool Board::isWhitePawn(byte piece) {
-    if(piece >= WP1 && piece <= WP8) {
+    if((piece & 0b00001111) == 0b00000010) {
         return true;
     }
     return false;
 }
 
 bool Board::isBlackPawn(byte piece) {
-    if(piece >= BP1 && piece <= BP8) {
+    if((piece & 0b00001111) == 0b00000011) {
         return true;
     }
     return false;

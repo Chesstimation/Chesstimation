@@ -17,8 +17,8 @@
     along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Open Mephisto 1.0"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 23th, 2021"
+#define VERSION     "Open Mephisto 1.02"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 30th, 2021"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -130,8 +130,8 @@ void displayAboutBox()
 {
   object = lv_msgbox_create(screenMain, VERSION, ABOUT_TEXT, NULL, true);
 
-  lv_obj_add_style(object, &fExtraLargeStyle, 0);
-  lv_obj_set_size(object, 455, 230);
+  lv_obj_add_style(object, &fLargeStyle, 0);
+  lv_obj_set_size(object, 368, 186);
   lv_obj_center(object);
   lv_obj_clear_flag(object, LV_OBJ_FLAG_SCROLLABLE);
 }
@@ -595,15 +595,15 @@ void updatePiecesOnBoard()
     certPiece = chessBoard.piece[i];
     if (oldBoard[i] != certPiece)
     {
-      if (certPiece >= BP1 && certPiece <= BP8)
+      if ((certPiece & 0b00001111) == 0b00000011)
       {
-        lv_obj_set_pos(bp[certPiece - BP1], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
-        lv_obj_clear_flag(bp[certPiece - BP1], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_pos(bp[(certPiece>>4) & 0x0f], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
+        lv_obj_clear_flag(bp[(certPiece>>4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
       }
-      if (certPiece >= WP1 && certPiece <= WP8)
+      if ((certPiece & 0b00001111) == 0b00000010)
       {
-        lv_obj_set_pos(wp[certPiece - WP1], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
-        lv_obj_clear_flag(wp[certPiece - WP1], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_pos(wp[(certPiece>>4) & 0x0f], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
+        lv_obj_clear_flag(wp[(certPiece>>4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
       }
       if (certPiece == WK1)
       {
@@ -699,13 +699,13 @@ void updatePiecesOnBoard()
       // Piece was lifted:
       // if (certPiece == EMP)
       // {
-        if (oldBoard[i] >= BP1 && oldBoard[i] <= BP8)
+        if ((oldBoard[i] & 0b00001111) == 0b00000011) // Black Pawn 
         {
-          lv_obj_add_flag(bp[oldBoard[i] - BP1], LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(bp[(oldBoard[i] >> 4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
         }
-        if (oldBoard[i] >= WP1 && oldBoard[i] <= WP8)
+        if ((oldBoard[i] & 0b00001111) == 0b00000010) // White Pawn 
         {
-          lv_obj_add_flag(wp[oldBoard[i] - WP1], LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(wp[(oldBoard[i] >> 4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
         }
         if (oldBoard[i] == WK1)
         {
@@ -1169,20 +1169,19 @@ void createUI()
   lv_style_set_text_font(&fExtraLargeStyle, &lv_font_montserrat_28); // was 28
     
   object = lv_label_create(screenMain);
-  lv_label_set_text(object, "Open Mephisto");
-  lv_obj_set_style_text_align(object, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_size(object, 150, 40);
-  lv_obj_set_pos(object, 325, 10);
+  lv_label_set_text(object, "Open\nMephisto");
+  lv_obj_set_style_text_align(object, LV_TEXT_ALIGN_LEFT, 0);
+  lv_obj_set_size(object, 140, 55);
+  lv_obj_set_pos(object, 333, 5);
   lv_label_set_long_mode(object, LV_LABEL_LONG_WRAP);
-  lv_obj_add_style(object, &fMediumStyle, 0);  
+  lv_obj_add_style(object, &fExtraLargeStyle, 0);  
   
   #ifdef LOLIN_D32
   batteryLbl = lv_label_create(screenMain);
-  // lv_label_set_text(batteryLbl, "?.??V");
-  lv_obj_set_style_text_align(batteryLbl, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_obj_set_size(batteryLbl, 90, 20);
-  lv_obj_set_pos(batteryLbl, 379, 230);
-  // lv_obj_add_style(batteryLbl, &f18Style, 0);  
+  lv_obj_set_style_text_align(batteryLbl, LV_TEXT_ALIGN_LEFT, 0);
+  lv_obj_set_size(batteryLbl, 33, 15);
+  lv_obj_set_pos(batteryLbl, 446, 0);
+  lv_obj_add_style(batteryLbl, &fLargeStyle, 0);  
   #endif
   
   liftedPiecesStringLbl = lv_label_create(screenMain);
@@ -1196,7 +1195,7 @@ void createUI()
   lv_label_set_text(debugLbl, "");
   lv_obj_set_style_text_align(debugLbl, LV_TEXT_ALIGN_RIGHT, 0);
   lv_obj_set_size(debugLbl, 135, 40);
-  lv_obj_set_pos(debugLbl, 330, 50);
+  lv_obj_set_pos(debugLbl, 330, 230);
   lv_obj_add_style(debugLbl, &fMediumStyle, 0);  
   
   settingsBtn = lv_btn_create(screenMain);
@@ -1368,7 +1367,6 @@ void setup()
   loadBoardSettings();
   // if(chessBoard.emulation == 0 && connection == BLE)
   //   connection = USB;
-  initSerialPortCommunication();
 
   mephisto.initPorts();
 
@@ -1386,18 +1384,29 @@ void setup()
 
   createSettingsScreen();
 
+  object = lv_label_create(screenMain);
+  lv_obj_set_style_text_align(object, LV_TEXT_ALIGN_RIGHT, 0);
+  lv_obj_set_size(object, 29, 20);
+  lv_obj_set_pos(object, 442, 75);
+  lv_obj_add_style(object, &fLargeStyle, 0);  
+
   if(connection == USB) 
   {
     lv_obj_add_state(usbCB, LV_STATE_CHECKED);
+    lv_label_set_text(object, LV_SYMBOL_USB);
   }
   if(connection == BT) 
   {
     lv_obj_add_state(btCB, LV_STATE_CHECKED);
+    lv_label_set_text(object, LV_SYMBOL_BLUETOOTH);
   }
   if(connection == BLE) 
   {
     lv_obj_add_state(bleCB, LV_STATE_CHECKED);
+    lv_label_set_text(object, LV_SYMBOL_BLUETOOTH);
   }
+
+  initSerialPortCommunication();
 
   lv_scr_load(screenMain);
 
@@ -1416,10 +1425,37 @@ void loop()
 #ifdef LOLIN_D32
   static long long oldMillis=-10000;
   unsigned long actMillis;
-  char batMessage[6];
+  char batMessage[12]="";
   actMillis = millis();
   if(actMillis-oldMillis>10000) {
-    sprintf(batMessage, "%.2fV", analogRead(35)/587.5);
+    float voltage = analogRead(35)/587.5;
+    // sprintf(batMessage, "%.2fV ", voltage);
+    // sprintf(batMessage, "");
+    if(voltage > 4.1)
+    {
+      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_FULL);
+      strcat(batMessage, LV_SYMBOL_BATTERY_FULL);
+    }
+    else if(voltage > 3.9)
+    {
+      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_3);
+      strcat(batMessage, LV_SYMBOL_BATTERY_3);
+    }
+    else if(voltage > 3.7)
+    {
+      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_2);
+      strcat(batMessage, LV_SYMBOL_BATTERY_2);
+    }
+    else if(voltage > 3.5)
+    {
+      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_1);
+      strcat(batMessage, LV_SYMBOL_BATTERY_1);
+    }
+    else if(voltage <= 3.3)
+    {
+      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_EMPTY);
+      strcat(batMessage, LV_SYMBOL_BATTERY_EMPTY);
+    }
     lv_label_set_text(batteryLbl, batMessage);
     oldMillis=actMillis;
   }

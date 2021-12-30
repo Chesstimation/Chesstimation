@@ -19,7 +19,7 @@
 
 #include <Arduino.h>
 
-//#define MAX_CERTABO_MSG_LENGTH 768
+// #define MAX_CERTABO_MSG_LENGTH 768
 #define MAX_CERTABO_MSG_LENGTH 680
 
 #define toBoardIndex(row, col) ((7 - row) * 8 + col)
@@ -30,44 +30,44 @@
 
 #define EMP 0
 
-#define BR1 81
-#define BN1 82
-#define BB1 83
-#define BQ1 84
-#define BK1 85
-#define BB2 86
-#define BN2 87
-#define BR2 88
+#define BR1 0b00000101
+#define BN1 0b00000111
+#define BB1 0b00001001
+#define BQ1 0b00001011
+#define BK1 0b00001101
+#define BB2 0b00011001
+#define BN2 0b00010111
+#define BR2 0b00010101
 
-#define BP1 71
-#define BP2 72
-#define BP3 73
-#define BP4 74
-#define BP5 75
-#define BP6 76
-#define BP7 77
-#define BP8 78
+#define BP1 0b00000011
+#define BP2 0b00010011
+#define BP3 0b00100011
+#define BP4 0b00110011
+#define BP5 0b01000011
+#define BP6 0b01010011
+#define BP7 0b01100011
+#define BP8 0b01110011
 
-#define WP1 21
-#define WP2 22
-#define WP3 23
-#define WP4 24
-#define WP5 25
-#define WP6 26
-#define WP7 27
-#define WP8 28
+#define WP1 0b00000010
+#define WP2 0b00010010
+#define WP3 0b00100010
+#define WP4 0b00110010
+#define WP5 0b01000010
+#define WP6 0b01010010
+#define WP7 0b01100010
+#define WP8 0b01110010
 
-#define WR1 11
-#define WN1 12
-#define WB1 13
-#define WQ1 14
-#define WK1 15
-#define WB2 16
-#define WN2 17
-#define WR2 18
+#define WR1 0b00000100
+#define WN1 0b00000110
+#define WB1 0b00001000
+#define WQ1 0b00001010
+#define WK1 0b00001100
+#define WB2 0b00011000
+#define WN2 0b00010110
+#define WR2 0b00010100
 
-#define WQ2 34
-#define BQ2 64
+#define WQ2 0b00011010
+#define BQ2 0b00011011
 
 class Board
 {
