@@ -61,50 +61,50 @@ This has already been considered in below table and you will be able to connect 
   </tr>
   <tr>
     <td>15 / D0</td>
-    <td>GPIO 33</td>
-  </tr>
-  <tr>
-    <td>16 / D1</td>
-    <td>GPIO 32</td>
-  </tr>
-  <tr>
-    <td>17 / D2</td>
-    <td>GPIO 26</td>
-  </tr>
-  <tr>
-    <td>18 / D3</td>
-    <td>GPIO 25</td>
-  </tr>
-  <tr>
-    <td>19 / D4</td>
-    <td>GPIO 14</td>
-  </tr>
-  <tr>
-    <td>20 / D5</td>
-    <td>GPIO 27</td>
-  </tr>
-  <tr>
-    <td>21 / D6</td>
-    <td>GPIO 13</td>
-  </tr>
-  <tr>
-    <td>22 / D7</td>
     <td>GPIO 12</td>
   </tr>
   <tr>
-    <td>29 / LDC_EN</td>
+    <td>16 / D1</td>
+    <td>GPIO 13</td>
+  </tr>
+  <tr>
+    <td>17 / D2</td>
+    <td>GPIO 27</td>
+  </tr>
+  <tr>
+    <td>18 / D3</td>
+    <td>GPIO 14</td>
+  </tr>
+  <tr>
+    <td>19 / D4</td>
+    <td>GPIO 25</td>
+  </tr>
+  <tr>
+    <td>20 / D5</td>
+    <td>GPIO 26</td>
+  </tr>
+  <tr>
+    <td>21 / D6</td>
+    <td>GPIO 32</td>
+  </tr>
+  <tr>
+    <td>22 / D7</td>
+    <td>GPIO 33</td>
+  </tr>
+  <tr>
+    <td>29 / LDC_LE</td>
     <td>GPIO 0</td>
   </tr>
   <tr>
-    <td>30 / CB_EN</td>
+    <td>30 / ROW_LE</td>
     <td>GPIO 4</td>
   </tr>
   <tr>
-    <td>31 / ROW_LE</td>
+    <td>31 / CB_EN</td>
     <td>GPIO 15</td>
   </tr>
   <tr>
-    <td>32 / LDC_LE</td>
+    <td>32 / LDC_EN</td>
     <td>GPIO 2</td>
   </tr>
 </table> 
