@@ -18,11 +18,16 @@
 */
 
 #include "mephisto.h"
+#include <driver/rtc_io.h>
 
 #define LATCH_WAIT 1
 
 void Mephisto::initPorts()
 {
+  rtc_gpio_hold_dis(gpio_num_t(ROW_LE));
+  rtc_gpio_hold_dis(gpio_num_t(LDC_LE));
+  rtc_gpio_hold_dis(gpio_num_t(LDC_EN));
+  rtc_gpio_hold_dis(gpio_num_t(CB_EN));
 
   pinMode(ROW_LE, OUTPUT);
   pinMode(LDC_LE, OUTPUT);

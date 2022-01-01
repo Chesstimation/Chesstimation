@@ -18,7 +18,7 @@
 */
 
 #define VERSION     "Open Mephisto 1.02"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 30th, 2021"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 1st, 2022"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -802,6 +802,30 @@ static void slider_event_cb(lv_event_t *e)
   // lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
 }
 
+void switchOff(void)
+{
+  saveBoardSettings();
+
+  tft.writecommand(0x10); // TFT Display Sleep mode on
+  // tft.writecommand(0x28);       // TFT Display Off
+
+  // pinMode(GPIO_NUM_16, OUTPUT);
+  ledcDetachPin(TFT_BL);
+  digitalWrite(GPIO_NUM_16, LOW); // Switch off backlight, somehow does not work with ILI9488 Display???
+
+  rtc_gpio_isolate(gpio_num_t(ROW_LE));
+  rtc_gpio_isolate(gpio_num_t(LDC_LE));
+  rtc_gpio_isolate(gpio_num_t(LDC_EN));
+  rtc_gpio_isolate(gpio_num_t(CB_EN));
+
+  delay(500);
+
+  esp_sleep_enable_ext0_wakeup(TOUCH_PANEL_IRQ_PIN, LOW);
+
+  gpio_deep_sleep_hold_en();
+  esp_deep_sleep_start();
+}
+
 static void event_handler(lv_event_t *e)
 {
   lv_event_code_t code = lv_event_get_code(e);
@@ -830,21 +854,7 @@ static void event_handler(lv_event_t *e)
     
     if (obj == offBtn)
     {
-      saveBoardSettings();
-
-      tft.writecommand(0x10);       // TFT Display Sleep mode on
-      // tft.writecommand(0x28);       // TFT Display Off
-
-      // pinMode(GPIO_NUM_16, OUTPUT);
-      ledcDetachPin(TFT_BL);
-      digitalWrite(GPIO_NUM_16, LOW);     // Switch off backlight, somehow does not work with ILI9488 Display???
-
-      delay(1000);
-
-      esp_sleep_enable_ext0_wakeup(TOUCH_PANEL_IRQ_PIN, LOW);
-
-      gpio_deep_sleep_hold_en();
-      esp_deep_sleep_start();
+      switchOff();
     }
     if (obj == settingsBtn)
     {
@@ -1431,27 +1441,27 @@ void loop()
     float voltage = analogRead(35)/587.5;
     // sprintf(batMessage, "%.2fV ", voltage);
     // sprintf(batMessage, "");
-    if(voltage > 4.1)
+    if(voltage > 4.15)
     {
       // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_FULL);
       strcat(batMessage, LV_SYMBOL_BATTERY_FULL);
     }
-    else if(voltage > 3.9)
+    else if(voltage > 3.85)
     {
       // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_3);
       strcat(batMessage, LV_SYMBOL_BATTERY_3);
     }
-    else if(voltage > 3.7)
+    else if(voltage > 3.55)
     {
       // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_2);
       strcat(batMessage, LV_SYMBOL_BATTERY_2);
     }
-    else if(voltage > 3.5)
+    else if(voltage > 3.25)
     {
       // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_1);
       strcat(batMessage, LV_SYMBOL_BATTERY_1);
     }
-    else if(voltage <= 3.3)
+    else if(voltage <= 3.25)
     {
       // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_EMPTY);
       strcat(batMessage, LV_SYMBOL_BATTERY_EMPTY);
