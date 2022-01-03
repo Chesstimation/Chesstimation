@@ -1435,38 +1435,32 @@ void loop()
 #ifdef LOLIN_D32
   static long long oldMillis=-10000;
   unsigned long actMillis;
-  char batMessage[12]="";
   actMillis = millis();
   if(actMillis-oldMillis>10000) {
     float voltage = analogRead(35)/587.5;
+    // char batMessage[12]="";
     // sprintf(batMessage, "%.2fV ", voltage);
-    // sprintf(batMessage, "");
-    if(voltage > 4.15)
+    // debugPrintln(batMessage);
+    if(voltage > 4.05)
     {
-      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_FULL);
-      strcat(batMessage, LV_SYMBOL_BATTERY_FULL);
+      lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_FULL);
     }
-    else if(voltage > 3.85)
+    else if(voltage > 3.88)
     {
-      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_3);
-      strcat(batMessage, LV_SYMBOL_BATTERY_3);
+      lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_3);
     }
-    else if(voltage > 3.55)
+    else if(voltage > 3.71)
     {
-      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_2);
-      strcat(batMessage, LV_SYMBOL_BATTERY_2);
+      lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_2);
     }
-    else if(voltage > 3.25)
+    else if(voltage > 3.54)
     {
-      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_1);
-      strcat(batMessage, LV_SYMBOL_BATTERY_1);
+      lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_1);
     }
-    else if(voltage <= 3.25)
+    else if(voltage <= 3.54)
     {
-      // lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_EMPTY);
-      strcat(batMessage, LV_SYMBOL_BATTERY_EMPTY);
+      lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_EMPTY);
     }
-    lv_label_set_text(batteryLbl, batMessage);
     oldMillis=actMillis;
   }
 #endif  
