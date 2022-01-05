@@ -37,8 +37,9 @@ If you like this project, I would be happy to receive a donation.
 1. Wemos LolinD32 (https://de.aliexpress.com/item/32808551116.html)
 2. 40-pin edge card connector, e.g. https://de.aliexpress.com/item/33035971298.html (you need to select 2x20 Pin)
 3. Rainbow Ribbon Cable (~30cm) with 1.27mm spacing, e.g. from Aliexpress: https://de.aliexpress.com/item/1005003002882947.html (you need to select 1.27mm spacing!)
-4. 3.5 inch Waveshare TFT Pico Res Touch display: https://www.waveshare.com/pico-restouch-lcd-3.5.htm (fits perfectly into one Mephisto module slot!)
-5. optionally lipo battery with plug for Lolin D32, e.g.: https://www.ebay.de/itm/324239268082?hash=item4b7e2a98f2:g:IXQAAOSwRJVhug4l (you need an extra JST PH 2.0mm plug for this battery)
+4. Waveshare 3.5 inch TFT Pico Res Touch display: https://www.waveshare.com/pico-restouch-lcd-3.5.htm, e.g available here: https://eckstein-shop.de/WaveShare35inchTouchDisplayModuleforRaspberryPiPico2C65KColors2C480C3973202CSPI
+5. Micro USB soldering plug (https://www.ebay.de/itm/333700073578) and USB-C female soldering connector (e.g. https://www.ebay.de/itm/233717443011) 
+6. optionally lipo battery with plug for Lolin D32, e.g.: https://www.ebay.de/itm/324239268082?hash=item4b7e2a98f2:g:IXQAAOSwRJVhug4l (you need an extra JST PH 2.0mm plug for this battery)
 
 ## How to connect the 40-pin plug to the Mephisto board?
 
