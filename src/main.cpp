@@ -1,5 +1,5 @@
 /*  
-    Copyright 2021 Andreas Petersik (andreas.petersik@gmail.com)
+    Copyright 2021, 2022 Andreas Petersik (andreas.petersik@gmail.com)
     
     This file is part of the Open Mephisto Project.
 
@@ -17,8 +17,8 @@
     along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Open Mephisto 1.02"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 1st, 2022"
+#define VERSION     "Open Mephisto 1.1"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 9th, 2022"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -1204,8 +1204,8 @@ void createUI()
   debugLbl = lv_label_create(screenMain);
   lv_label_set_text(debugLbl, "");
   lv_obj_set_style_text_align(debugLbl, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_obj_set_size(debugLbl, 135, 40);
-  lv_obj_set_pos(debugLbl, 330, 230);
+  lv_obj_set_size(debugLbl, 144, 40);
+  lv_obj_set_pos(debugLbl, 325, 230);
   lv_obj_add_style(debugLbl, &fMediumStyle, 0);  
   
   settingsBtn = lv_btn_create(screenMain);
@@ -1438,26 +1438,27 @@ void loop()
   actMillis = millis();
   if(actMillis-oldMillis>10000) {
     float voltage = analogRead(35)/587.5;
-    // char batMessage[12]="";
-    // sprintf(batMessage, "%.2fV ", voltage);
+    // char batMessage[80]="";
+    // sprintf(batMessage, "%.2fV - %1.0f min", voltage, actMillis/60000.0);
+    // lv_label_set_text(debugLbl, batMessage);
     // debugPrintln(batMessage);
-    if(voltage > 4.05)
+    if(voltage > 3.79)
     {
       lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_FULL);
     }
-    else if(voltage > 3.88)
+    else if(voltage > 3.56)
     {
       lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_3);
     }
-    else if(voltage > 3.71)
+    else if(voltage > 3.46)
     {
       lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_2);
     }
-    else if(voltage > 3.54)
+    else if(voltage > 3.35)
     {
       lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_1);
     }
-    else if(voltage <= 3.54)
+    else
     {
       lv_label_set_text(batteryLbl, LV_SYMBOL_BATTERY_EMPTY);
     }
