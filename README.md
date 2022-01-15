@@ -95,19 +95,19 @@ This has already been considered in below table and you will be able to connect 
   </tr>
   <tr>
     <td>29 / LDC_LE</td>
-    <td>GPIO 0</td>
+    <td>GPIO 2</td>
   </tr>
   <tr>
     <td>30 / ROW_LE</td>
-    <td>GPIO 4</td>
-  </tr>
-  <tr>
-    <td>31 / CB_EN</td>
     <td>GPIO 15</td>
   </tr>
   <tr>
+    <td>31 / CB_EN</td>
+    <td>GPIO 4</td>
+  </tr>
+  <tr>
     <td>32 / LDC_EN</td>
-    <td>GPIO 2</td>
+    <td>GPIO 0</td>
   </tr>
 </table> 
 
