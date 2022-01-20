@@ -1,3 +1,5 @@
+**English** | [Deutsch](./README_de.md) |
+
 # Open Mephisto
 
 This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modular chess computer (Modular, Exclusive or München Board) to a computer or a smart phone.
