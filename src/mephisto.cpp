@@ -1,5 +1,5 @@
 /*  
-    Copyright 2021 Andreas Petersik (andreas.petersik@gmail.com)
+    Copyright 2021, 2022 Andreas Petersik (andreas.petersik@gmail.com)
     
     This file is part of the Open Mephisto Project.
 
@@ -19,8 +19,6 @@
 
 #include "mephisto.h"
 #include <driver/rtc_io.h>
-
-#define LATCH_WAIT 1
 
 void Mephisto::initPorts()
 {
@@ -44,6 +42,13 @@ byte Mephisto::readRow(byte row)
 {
   byte rowResult;
 
+  digitalWrite(LDC_EN, LOW);
+  digitalWrite(ROW_LE, LOW);
+  digitalWrite(LDC_LE, LOW);
+  digitalWrite(CB_EN, HIGH);
+
+  delayMicroseconds(LATCH_WAIT);
+
   // select row to read:
   for (byte i = 0; i < 8; i++)
   {
@@ -61,19 +66,25 @@ byte Mephisto::readRow(byte row)
   delayMicroseconds(LATCH_WAIT);
   digitalWrite(ROW_LE, LOW);
 
+  delayMicroseconds(LATCH_WAIT); 
   // set all columns to LOW:
   for (byte i = 0; i < 8; i++)
   {
     digitalWrite(bytePort[i], LOW);
   }
+  delayMicroseconds(LATCH_WAIT); 
   
   digitalWrite(LDC_LE, HIGH);
   delayMicroseconds(LATCH_WAIT);
   digitalWrite(LDC_LE, LOW);
 
+  delayMicroseconds(LATCH_WAIT); 
+
   digitalWrite(LDC_EN, HIGH);
   delayMicroseconds(LATCH_WAIT); // fix for older Exclusive boards
   digitalWrite(LDC_EN, LOW);
+
+  delayMicroseconds(LATCH_WAIT); 
 
   digitalWrite(CB_EN, LOW);
   delayMicroseconds(LATCH_WAIT); // Mandatory to work!
@@ -91,6 +102,10 @@ byte Mephisto::readRow(byte row)
 
 void Mephisto::writeRow(byte row, byte value)
 {
+
+  digitalWrite(CB_EN, HIGH);  
+  digitalWrite(ROW_LE, LOW);
+  digitalWrite(LDC_LE, LOW);
 
   digitalWrite(LDC_EN, HIGH);
 

@@ -1,5 +1,5 @@
 /*  
-    Copyright 2021 Andreas Petersik (andreas.petersik@gmail.com)
+    Copyright 2021, 2022 Andreas Petersik (andreas.petersik@gmail.com)
     
     This file is part of the Open Mephisto Project.
 
@@ -260,8 +260,9 @@ byte Board::getNextPromotionPieceForBlack(byte p) {
 
 void Board::setPieceBackTo(byte boardIndex)
 {
-    // if (liftedIdx == 0)
-    //     return;
+    if (liftedIdx == 0)
+        return;
+
     // Check if white pawn was moved from row 7 to 8, then promote! (Internally rows are in reverse order 0-7 is 8-1)
     if (((!flipped && getRowFromBoardIndex(boardIndex) == 0 && getRowFromBoardIndex((piecesLifted[liftedIdx - 1] >> 8)) == 1 ) ||
         (flipped && getRowFromBoardIndex(boardIndex) == 7 && getRowFromBoardIndex((piecesLifted[liftedIdx - 1] >> 8)) == 6))
@@ -299,8 +300,10 @@ void Board::setPieceBackTo(byte boardIndex)
 }
 
 void Board::liftPieceFrom(byte boardIndex) {
-//      piecesLifted[liftedIdx]=boardIndex;
-//      piecesLifted[liftedIdx]<<=8;
+      if(piece[boardIndex]==EMP) 
+      {
+          return;
+      }
       piecesLifted[liftedIdx]=((uint16_t)boardIndex)<<8 | piece[boardIndex];
       liftedIdx++;
       piece[boardIndex]=EMP;

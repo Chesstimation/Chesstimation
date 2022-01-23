@@ -1,5 +1,5 @@
 /*  
-    Copyright 2021 Andreas Petersik (andreas.petersik@gmail.com)
+    Copyright 2021, 2022 Andreas Petersik (andreas.petersik@gmail.com)
     
     This file is part of the Open Mephisto Project.
 
@@ -18,6 +18,8 @@
 */
 
 #include <Arduino.h>
+
+#define LATCH_WAIT 1
 
 // Lolin D32 Module:
 #define LDC_EN   2    // BLACK  - connects to pin 29 of 40 pin connector

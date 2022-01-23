@@ -17,8 +17,8 @@
     along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Open Mephisto 1.1"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 9th, 2022"
+#define VERSION     "Open Mephisto 1.2"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 23th, 2022"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -786,6 +786,7 @@ void updatePiecesOnBoard()
   }
   if (updated < 2)
   {
+    // Put comment before next line to enable debug output via debugLbl
     lv_label_set_text(debugLbl, "");
   }
   else if (updated != 32)
@@ -813,8 +814,17 @@ void switchOff(void)
   ledcDetachPin(TFT_BL);
   digitalWrite(GPIO_NUM_16, LOW); // Switch off backlight, somehow does not work with ILI9488 Display???
 
+  for(int i = 0; i<8; i++)
+  {
+    mephisto.writeRow(i, 0);
+  }
+
   rtc_gpio_isolate(gpio_num_t(ROW_LE));
   rtc_gpio_isolate(gpio_num_t(LDC_LE));
+
+  // rtc_gpio_hold_en(gpio_num_t(LDC_EN));
+  // rtc_gpio_hold_en(gpio_num_t(CB_EN));
+
   rtc_gpio_isolate(gpio_num_t(LDC_EN));
   rtc_gpio_isolate(gpio_num_t(CB_EN));
 
@@ -1108,7 +1118,7 @@ void createSettingsScreen()
 
   restartBtn = lv_btn_create(content);
   label = lv_label_create(restartBtn);
-  lv_label_set_text(label, "Restart");
+  lv_label_set_text(label, "New Game");
   lv_obj_add_event_cb(restartBtn, event_handler, LV_EVENT_ALL, NULL);
   lv_obj_set_size(restartBtn, 180, 35);
   lv_obj_center(label);
