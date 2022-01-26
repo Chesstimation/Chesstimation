@@ -11,6 +11,7 @@ Für das Modul werden nur wenige Standard-Hardwarekomponenten benötigt.
 
 * Keine Modifikation am originalen Mephisto Modular/Exclusive/München Brett erforderlich. Einfach die alten Module durch das Modul aus diesem Projekt ersetzen!
 * 3,5" Farb-TFT-Display (480x320 Pixel), der verfügbare Platz wird perfekt ausgenutzt.
+* moderne, intuitive Bedienung über Touch
 * Die aktuelle Stellung der Figuren wird auf dem Display angezeigt.
 * Sowohl Weiß als auch Schwarz können von vorne gespielt werden.
 * Alle Züge des Gegners werden über die LEDs auf dem Brett angezeigt.
@@ -19,12 +20,13 @@ Für das Modul werden nur wenige Standard-Hardwarekomponenten benötigt.
 * Spielen ganz ohne Kabel ist möglich!
 * Alle Einstellungen und die Position des Figuren gehen beim Ausschalten des Geräts nicht verloren!
 * Das Ein- und Ausschalten dauert weniger als 2 Sekunden.
-* Certabo oder Millennium Chesslink kann als Emulation ausgewählt werden, wodurch es mit vielen Schachprogrammen kompatibel ist:
+* Certabo oder Millennium Chesslink kann als Emulation ausgewählt werden, wodurch es mit vielen Schachprogrammen kompatibel ist.
+* Durch die große Kompatibilität kann gegen fast sämlich verfügbare Schachsoftware und auch online gespielt werden.
+* Folgende Software wurde bislang erfolgreich getestet:
   * "White Pawn" auf iPhone (https://khadimfall.com/p/white-pawn)
-  * BearChess (http://www.solanosoft.com/index.php?page=bearchess)
-  * Original Certabo Software (https://www.certabo.com/)
-  * Lucas Chess (https://lucaschess.pythonanywhere.com/index?lang=en)
-  * und über Grahams DLLs (https://goneill.co.nz/chess.php) eigentlich mit jeder Software, die DGT-Bretter ansteuern kann.
+  * BearChess unter Windows (http://www.solanosoft.com/index.php?page=bearchess)
+  * Original Certabo Software unter Windows (https://www.certabo.com/)
+* Über Grahams DLLs (https://goneill.co.nz/chess.php) kann eigentlich jede Software verwendet werden, die DGT-Bretter ansteuern kann.
 
 ## Aktuelle Einschränkungen:
 

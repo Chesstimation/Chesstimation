@@ -18,7 +18,7 @@
 */
 
 #define VERSION     "Open Mephisto 1.2"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 23th, 2022"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 25th, 2022"
 
 #include <Arduino.h>
 #include <SPIFFS.h>

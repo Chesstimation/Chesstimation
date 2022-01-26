@@ -106,8 +106,9 @@ void Mephisto::writeRow(byte row, byte value)
   digitalWrite(CB_EN, HIGH);  
   digitalWrite(ROW_LE, LOW);
   digitalWrite(LDC_LE, LOW);
-
   digitalWrite(LDC_EN, HIGH);
+
+  delayMicroseconds(LATCH_WAIT);
 
   // select row:
   for (byte i = 0; i < 8; i++)
@@ -125,6 +126,7 @@ void Mephisto::writeRow(byte row, byte value)
   digitalWrite(ROW_LE, HIGH);
   delayMicroseconds(LATCH_WAIT);
   digitalWrite(ROW_LE, LOW);
+  delayMicroseconds(LATCH_WAIT);
 
   // select column:
   for (byte i = 0; i < 8; i++)
@@ -134,5 +136,6 @@ void Mephisto::writeRow(byte row, byte value)
   digitalWrite(LDC_LE, HIGH);
   delayMicroseconds(LATCH_WAIT);
   digitalWrite(LDC_LE, LOW);
+  delayMicroseconds(LATCH_WAIT);
   digitalWrite(LDC_EN, LOW);
 }
