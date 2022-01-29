@@ -33,7 +33,6 @@ Für das Modul werden nur wenige Standard-Hardwarekomponenten benötigt.
 * Bauernumwandlung nur in Dame.
 * Die geschlagene Figur muss erst vom Brett entfernt werden, bevor die schlagende Figur auf das Feld gesetzt wird. 
 * Kann nicht gleichzeitig mit anderen Mephisto-Modulen im Brett betrieben werden (macht aber auch keinen Sinn!).
-* Die gedruckten Module passen aktuell nicht in Modular Bretter, sondern nur in Exclusive oder München. (Ich arbeite aktuell schon an einer neuen Version, die auch mechanisch in alle drei Bretter passt.)
 
 ## Spenden:
 
@@ -52,6 +51,7 @@ Falls euch das Projekt gefällt, würde ich mich über Spenden sehr freuen:
 ## Benötigte Werkzeuge und Fähigkeiten:
 * entsprechendes Werkzeug zum Löten: Lötkolben, Abisolierzange, Seitenschneider, etc.
   * es müssen 16 Kabel einseitig und 15 weitere Kabel beidseitig angelötet werden.
+* ein Schraubstock mit einer Klemmbreite von 6 cm oder mehr, um den Stecker auf das Flachbandkabel pressen zu können
 * ein Multimeter ist hilfreich, um die korrekte Polung des Micro-USB zu USB-C Kabels sicher zu stellen.
 * ein 3D-Drucker, um das Modulgehäuse zu drucken. Alternativ kann man den 3D-Druck bei einem Dienstleister in Auftrag geben.
 

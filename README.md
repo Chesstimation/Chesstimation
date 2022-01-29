@@ -28,7 +28,6 @@ This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modul
 * Pawn promotion currently to queen only.
 * Captured piece needs to be removed from board before capturing piece is put to the square. 
 * Must not be combined with other modules or power supplies.
-* 3D printing files currently do not result in modules which can be inserted into the "Modular" boards. I just tested in "Exclusive" boards where it fits perfectly.
 
 ## Donation:
 
