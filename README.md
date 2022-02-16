@@ -8,16 +8,19 @@ This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modul
 
 * No modification to original Mephisto Modular/Exclusive/München board required. Just replace the old modules with the new one!
 * 3.5" Color-TFT (480x320 Pixels), available space is perfectly used.
+* Modern, intuitive touch control
 * Current position is shown on the display.
 * Both White and Black can be played from the front.
 * All opponent's moves are displayed via the board's LEDs.
 * Power supply via built-in battery that can be charged via USB-C (with 2200 mAh lipo >7h running time, ~4h charging time). 
-* Communication with PC via USB-C or Bluetooth Classic, to iPhone via BLE (Bluetooth Low Energy).
+* Communication with PC via USB-C, Bluetooth Classic or BLE (Bluetooth Low Energy).
 * Playing completely without cables is possible!
 * All settings and the board position are not lost when the device is switched off!
 * Switching on and off takes less than 2 seconds.
 * Certabo or Millennium Chesslink can be selected as emulation, making it compatible with many chess programs:
-  * "White Pawn" on iPhone (https://khadimfall.com/p/white-pawn)
+  * "White Pawn" on iPhone and Android (https://khadimfall.com/p/white-pawn)
+  * "Chess for Android"
+  * "Chess Dojo App" for Android
   * BearChess (http://www.solanosoft.com/index.php?page=bearchess)
   * original Certabo Software (https://www.certabo.com/)
   * Lucas Chess (https://lucaschess.pythonanywhere.com/index?lang=en)
@@ -29,9 +32,11 @@ This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modul
 * Captured piece needs to be removed from board before capturing piece is put to the square. 
 * Must not be combined with other modules or power supplies.
 
-## Donation:
+## Contact & Donation:
 
-If you like this project, I would be happy to receive a donation. 
+If you like this project you may contact me via chesstimation@kabelmail.de
+
+I would also be happy to receive a donation. 
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/AndreasPetersik)
 
@@ -56,7 +61,7 @@ This has already been considered in below table and you will be able to connect 
   </tr>
   <tr>
     <td>1+2</td>
-    <td>3.3V</td>
+    <td>3V</td>
   </tr>
   <tr>
     <td>39+40</td>
@@ -121,7 +126,7 @@ This has already been considered in below table and you will be able to connect 
   </tr>
   <tr>
     <td>VSYS</td>
-    <td>3.3V</td>
+    <td>3V</td>
   </tr>
   <tr>
     <td>GND</td>
@@ -153,7 +158,7 @@ This has already been considered in below table and you will be able to connect 
   </tr>
   <tr>
     <td>LCD_RST</td>
-    <td>RESET</td>
+    <td>RST(RESET)</td>
   </tr>
   <tr>
     <td>TP_CS</td>
@@ -172,7 +177,7 @@ Software development is done in C++ using:
 * Platform IO
 
 In Platform IO you need to install 2 additional libraries for this project:
-* LVGL 8.1 (you need to use Open Mephisto's lv_conf.h)
-* TFT eSPI 2.4.11 (you need to use chess-module-display.h as User_Setup.h)
+* LVGL 8.2 (you need to use Open Mephisto's lv_conf.h)
+* TFT eSPI 2.4.35 (you need to use chess-module-display.h as User_Setup.h)
 
 For flashing the firmware to the Lolin D32 without Platform IO I use ESP Flasher: https://github.com/Jason2866/ESP_Flasher/releases

@@ -16,14 +16,16 @@ Für das Modul werden nur wenige Standard-Hardwarekomponenten benötigt.
 * Sowohl Weiß als auch Schwarz können von vorne gespielt werden.
 * Alle Züge des Gegners werden über die LEDs auf dem Brett angezeigt.
 * Stromversorgung über einen eingebauten Akku, der über USB-C geladen werden kann (mit 2200 mAh Lipo >7h Laufzeit, ~4h Ladezeit). 
-* Kommunikation mit dem PC über USB-C oder Bluetooth Classic, zum Smartphone über BLE (Bluetooth Low Energy).
-* Spielen ganz ohne Kabel ist möglich!
+* Kommunikation wahlweise über USB-C, Bluetooth Classic oder BLE (Bluetooth Low Energy).
+* Spielen ganz ohne Kabel ist somit möglich!
 * Alle Einstellungen und die Position des Figuren gehen beim Ausschalten des Geräts nicht verloren!
 * Das Ein- und Ausschalten dauert weniger als 2 Sekunden.
 * Certabo oder Millennium Chesslink kann als Emulation ausgewählt werden, wodurch es mit vielen Schachprogrammen kompatibel ist.
 * Durch die große Kompatibilität kann gegen fast sämlich verfügbare Schachsoftware und auch online gespielt werden.
 * Folgende Software wurde bislang erfolgreich getestet:
-  * "White Pawn" auf iPhone (https://khadimfall.com/p/white-pawn)
+  * "White Pawn" auf iPhone oder Android (https://khadimfall.com/p/white-pawn)
+  * "Chess for Android"
+  * "Chess Dojo App" auf Android
   * BearChess unter Windows (http://www.solanosoft.com/index.php?page=bearchess)
   * Original Certabo Software unter Windows (https://www.certabo.com/)
 * Über Grahams DLLs (https://goneill.co.nz/chess.php) kann eigentlich jede Software verwendet werden, die DGT-Bretter ansteuern kann.
@@ -34,9 +36,11 @@ Für das Modul werden nur wenige Standard-Hardwarekomponenten benötigt.
 * Die geschlagene Figur muss erst vom Brett entfernt werden, bevor die schlagende Figur auf das Feld gesetzt wird. 
 * Kann nicht gleichzeitig mit anderen Mephisto-Modulen im Brett betrieben werden (macht aber auch keinen Sinn!).
 
-## Spenden:
+## Kontakt / Spenden:
 
-Falls euch das Projekt gefällt, würde ich mich über Spenden sehr freuen:
+Falls euch das Projekt gefällt, könnt ihr mich gerne kontaktieren über chesstimation@kabelmail.de
+
+Über eine Spende würde ich mich auch sehr freuen:
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/AndreasPetersik)
 
@@ -69,7 +73,7 @@ Ich habe dies in unten stehender Tabelle so berücksichtigt, dass man sowohl die
   </tr>
   <tr>
     <td>1+2</td>
-    <td>3.3V</td>
+    <td>3V</td>
   </tr>
   <tr>
     <td>39+40</td>
@@ -134,7 +138,7 @@ Ich habe dies in unten stehender Tabelle so berücksichtigt, dass man sowohl die
   </tr>
   <tr>
     <td>VSYS</td>
-    <td>3.3V</td>
+    <td>3V</td>
   </tr>
   <tr>
     <td>GND</td>
@@ -166,7 +170,7 @@ Ich habe dies in unten stehender Tabelle so berücksichtigt, dass man sowohl die
   </tr>
   <tr>
     <td>LCD_RST</td>
-    <td>RESET</td>
+    <td>RST(RESET)</td>
   </tr>
   <tr>
     <td>TP_CS</td>
@@ -185,7 +189,7 @@ Software development is done in C++ using:
 * Platform IO
 
 In Platform IO you need to install 2 additional libraries for this project:
-* LVGL 8.1 (you need to use Open Mephisto's lv_conf.h)
-* TFT eSPI 2.4.11 (you need to use chess-module-display.h as User_Setup.h)
+* LVGL 8.2 (you need to use Open Mephisto's lv_conf.h)
+* TFT eSPI 2.4.35 (you need to use chess-module-display.h as User_Setup.h)
 
 For flashing the firmware to the Lolin D32 without Platform IO I use ESP Flasher: https://github.com/Jason2866/ESP_Flasher/releases
