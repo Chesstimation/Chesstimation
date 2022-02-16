@@ -17,8 +17,8 @@
     along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Open Mephisto 1.2"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 25th, 2022"
+#define VERSION     "Open Mephisto 1.3 beta"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Feb 16th, 2022"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -48,9 +48,13 @@
 #define BOARD_SETUP_FILE  "/board_setup"
 #define SQUARE_SIZE         40
 
+// #define PEGASUS
+
 Mephisto mephisto;
 Board chessBoard;
 BluetoothSerial SerialBT;
+
+int millBLEinitialized = 0;
 
 enum connectionType {USB, BT, BLE} connection;
 
@@ -68,13 +72,16 @@ BLEServer *pServer = NULL;
 BLECharacteristic *pTxCharacteristic;
 BLEService *pService;
 
+SemaphoreHandle_t sendBLEsemaphore = NULL;
+
 char incomingMessage[170];
 std::string replyString;
 
 TFT_eSPI tft = TFT_eSPI();
 
-#define DISP_BUF_SIZE (480 * 40)
-static lv_disp_draw_buf_t disp_buf; //LVGL stuff;
+#define DISP_BUF_SIZE (320 * 80)
+// #define DISP_BUF_SIZE (480 * 40)
+static lv_disp_draw_buf_t disp_buf;
 static lv_color_t buf[DISP_BUF_SIZE];
 
 static lv_style_t fMediumStyle;
@@ -100,7 +107,7 @@ lv_disp_drv_t disp_drv;
 lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
-lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB;
+lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB, *pegasusCB;
 lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
@@ -193,7 +200,7 @@ void saveBoardSettings(void)
     SPIFFS.begin();
   }
 
-  if ((lv_obj_get_state(bleCB) & LV_STATE_CHECKED) == 1 && chessBoard.emulation == 1)
+  if ((lv_obj_get_state(bleCB) & LV_STATE_CHECKED) == 1 && chessBoard.emulation != 0)
   {
     saveConnection = BLE;
   }
@@ -212,6 +219,7 @@ void saveBoardSettings(void)
     f.write(chessBoard.emulation);
     f.write(chessBoard.flipped);
     f.write(saveConnection);
+    f.write(brightness);
     f.close();
   }
 }
@@ -265,6 +273,17 @@ void loadBoardSettings(void)
       {
         connection = (connectionType)tempInt8[0];
       }
+      if (f.readBytes((char *)tempInt8, 1) == 1)
+      {
+        if(tempInt8[0] < 190)
+        {
+          brightness = 190;
+        }
+        else
+        {
+          brightness = tempInt8[0];
+        }
+      }
       f.close();
     }
   }
@@ -291,10 +310,8 @@ void sendMessageToChessBoard(const char *message)
 {
   std::string codedMessage = message;
   char blockCode[3];
-  if (chessBoard.emulation == 1)
-  {
-    debugPrint("Clear Message to be sent: ");
-  }
+
+  debugPrint("Message to be sent from Board to Application: ");
   debugPrintln(message);
 
   if (chessBoard.emulation == 1)
@@ -313,10 +330,22 @@ void sendMessageToChessBoard(const char *message)
         codedMessage[i] += 128;
       }
     }
-    debugPrint("Final Message to be sent: ");
-    debugPrintln(codedMessage.c_str());
-    pTxCharacteristic->setValue(codedMessage);
-    pTxCharacteristic->notify();
+    // debugPrint("Final Message to be sent: ");
+    // debugPrintln(codedMessage.c_str());
+
+    if (xSemaphoreTake(sendBLEsemaphore, portMAX_DELAY) == pdTRUE)
+    {
+      for (int i = 0; i < codedMessage.length(); i += 8)
+      {
+        pTxCharacteristic->setValue(codedMessage.substr(i, 8));
+        pTxCharacteristic->notify();
+      }
+      xSemaphoreGive(sendBLEsemaphore);
+    }
+    else
+    {
+      debugPrintln("*** Semaphore could not be taken - ERROR sending message ***");
+    }
   }
   if (connection == BT)
   {
@@ -334,13 +363,27 @@ void updateSettingsScreen()
 {
   if(chessBoard.emulation==0) 
   {
+#ifdef PEGASUS
+    lv_obj_clear_state(pegasusCB, LV_STATE_CHECKED);  
+#endif
     lv_obj_add_state(certaboCB, LV_STATE_CHECKED);
     lv_obj_clear_state(chesslinkCB, LV_STATE_CHECKED);  
   }
   if(chessBoard.emulation==1) 
   {
+#ifdef PEGASUS
+    lv_obj_clear_state(pegasusCB, LV_STATE_CHECKED);  
+#endif
     lv_obj_clear_state(certaboCB, LV_STATE_CHECKED);
     lv_obj_add_state(chesslinkCB, LV_STATE_CHECKED);  
+  }
+  if(chessBoard.emulation==2) 
+  {
+    lv_obj_clear_state(certaboCB, LV_STATE_CHECKED);
+    lv_obj_clear_state(chesslinkCB, LV_STATE_CHECKED);
+#ifdef PEGASUS
+    lv_obj_add_state(pegasusCB, LV_STATE_CHECKED);  
+#endif
   }
   if(chessBoard.flipped) 
   {
@@ -352,7 +395,23 @@ void updateSettingsScreen()
   }
 }
 
-// You need to declare handles for connection and disconnection events
+class MyServerCallbacksPegasus : public BLEServerCallbacks
+{
+  void onConnect(BLEServer *pServer)
+  {
+    connection = BLE;
+    updateSettingsScreen();
+    debugPrintln("Pegasus Emulation: BLE DEVICE CONNECTED");
+  };
+
+  void onDisconnect(BLEServer *pServer)
+  {
+    debugPrintln("Pegasus Emulation: BLE DEVICE DISCONNECTED");
+    updateSettingsScreen();
+    delay(500);                  // give the bluetooth stack the chance to get things ready
+    pServer->startAdvertising(); // restart advertising
+  }
+};
 
 class MyServerCallbacks : public BLEServerCallbacks
 {
@@ -360,18 +419,14 @@ class MyServerCallbacks : public BLEServerCallbacks
   {
     connection = BLE;
     updateSettingsScreen();
-    // initSerialPortCommunication();
-    debugPrintln("BLE DEVICE CONNECTED");
-    //your stuff for handling new connections
+    debugPrintln("Millennium Emulation: BLE DEVICE CONNECTED");
   };
 
   void onDisconnect(BLEServer *pServer)
   {
-    debugPrintln("BLE DEVICE DISCONNECTED");
+    debugPrintln("Millennium Emulation: BLE DEVICE DISCONNECTED");
+    millBLEinitialized = 0;
     updateSettingsScreen();
-    // initSerialPortCommunication();
-    //your stuff for handling closed connections
-
     delay(500);                  // give the bluetooth stack the chance to get things ready
     pServer->startAdvertising(); // restart advertising
   }
@@ -381,21 +436,21 @@ void sendChesslinkAnswer(char *incomingMessage)
 {
   if (strlen(incomingMessage) == 3 && (strcmp(incomingMessage, "V56") == 0))
   {
-    debugPrintln("Detected valid Version Request Message V");
+    debugPrint("Detected valid incoming Version Request Message V: ");
     debugPrintln(incomingMessage);
-    sendMessageToChessBoard("v0103");
+    sendMessageToChessBoard("v0021");  // identify as Millennium Exclusive board
     return;
   }
   if (strlen(incomingMessage) == 5 && incomingMessage[0] == 'R')
   {
-    debugPrintln("Detected Read EEPROM Message R:");
+    debugPrint("Detected incoming Read EEPROM Message R: ");
     debugPrintln(incomingMessage);
     incomingMessage[0] = 'r';
     char twoDigits[3];
     sprintf(twoDigits, "%02X", eeprom[incomingMessage[2] - '0']);
     debugPrint("EEPROM Pos requested: ");
-    debugPrintln(String(incomingMessage[2] - '0').c_str());
-    debugPrint("Content to be sent: ");
+    debugPrint(String(incomingMessage[2] - '0').c_str());
+    debugPrint(" Content to be sent: ");
     debugPrintln(twoDigits);
     incomingMessage[3] = twoDigits[0];
     incomingMessage[4] = twoDigits[1];
@@ -404,9 +459,8 @@ void sendChesslinkAnswer(char *incomingMessage)
   }
   if (strlen(incomingMessage) == 7 && incomingMessage[0] == 'W')
   {
-    debugPrintln("Detected message W:");
+    debugPrint("Detected incoming Write EEPROM Message W: ");
     debugPrintln(incomingMessage);
-    debugPrintln("Detected Write EEPROM Message W");
     incomingMessage[0] = 'w';
 
     char twoDigits[3];
@@ -415,31 +469,33 @@ void sendChesslinkAnswer(char *incomingMessage)
     twoDigits[2] = 0;
     eeprom[incomingMessage[2] - '0'] = strtol(twoDigits, NULL, 16);
 
-    debugPrint("Eeprom Pos requested: ");
-    debugPrintln(String(incomingMessage[2] - '0').c_str());
-    debugPrint("Value read: ");
+    debugPrint("Write to EEPROM Pos: ");
+    debugPrint(String(incomingMessage[2] - '0').c_str());
+    debugPrint(" Value: ");
     debugPrintln(String(eeprom[incomingMessage[2] - '0']).c_str());
 
     incomingMessage[5] = 0;
     sendMessageToChessBoard(incomingMessage);
     return;
   }
-  if (strlen(incomingMessage) == 3 && incomingMessage[0] == 'S')
+  if (strlen(incomingMessage) == 3 && (strcmp(incomingMessage, "S53") == 0))
   {
-    debugPrintln("Detected Status request Message S:");
+    debugPrint("Detected valid incoming Status request Message S: ");
     debugPrintln(incomingMessage);
     sendMessageToChessBoard(chessBoard.boardMessage);
     return;
   }
   if (strlen(incomingMessage) == 167 && incomingMessage[0] == 'L')
   {
-    debugPrintln("Detected set LED Message L:");
+    debugPrint("Detected incoming set LED Message L: ");
     debugPrintln(incomingMessage);
+    sendMessageToChessBoard("l");
 
     incomingMessage[165] = 0;
     chessBoard.updateMilleniumLEDs((&incomingMessage[1]));
 
     // Print DEBUG LED pattern:
+    debugPrintln("DEBUG Output Millennium LED Pattern:");
     for (byte row = 0; row < 9; row++)
     {
       for (byte col = 0; col < 9; col++)
@@ -450,33 +506,37 @@ void sendChesslinkAnswer(char *incomingMessage)
       }
       debugPrintln("");
     }
+    debugPrintln("");
     updateMephistoLEDs(mephistoLED);
-    sendMessageToChessBoard("l");
     return;
   }
-  if (incomingMessage[0] == 'I')
+  if (strlen(incomingMessage) == 3 && incomingMessage[0] == 'I')
   {
-    debugPrintln("Detected Message I:");
+    debugPrint("Detected incoming Message I: ");
     debugPrintln(incomingMessage);
-    sendMessageToChessBoard("i00");
+    sendMessageToChessBoard("i0055mm\n");  // Tournament 55 board
     return;
   }
-  if (strlen(incomingMessage) == 3 && incomingMessage[0] == 'X')
+  if (strlen(incomingMessage) == 3 && (strcmp(incomingMessage, "X58") == 0))
   {
-    debugPrintln("Detected Message X:");
+    debugPrint("Detected valid incoming Message X: ");
     debugPrintln(incomingMessage);
+    sendMessageToChessBoard("x");
     chessBoard.extinguishMilleniumLEDs();
     updateMephistoLEDs(mephistoLED);
-    sendMessageToChessBoard("x");
+    millBLEinitialized = 1;
     return;
   }
 }
 
-class MyCallbacks : public BLECharacteristicCallbacks
+class MyCallbacksChesslink : public BLECharacteristicCallbacks
 {
   void onWrite(BLECharacteristic *pCharacteristic)
   {
     std::string rxValue = pCharacteristic->getValue();
+    // char tempString[64];
+    // sprintf(tempString, "received msg-length: %i", rxValue.length());
+    // debugPrintln(tempString);
     // your stuff to process incoming data
     char readChar;
 
@@ -493,15 +553,72 @@ class MyCallbacks : public BLECharacteristicCallbacks
   }
 };
 
-void initBleService()
+class MyCallbacksPegasus : public BLECharacteristicCallbacks
+{
+  void onWrite(BLECharacteristic *pCharacteristic)
+  {
+    std::string rxValue = pCharacteristic->getValue();
+    // your stuff to process incoming data
+    char readChar;
+
+    if (rxValue.length() > 0)
+    {
+      for (int i = 0; i < rxValue.length(); i++)
+      {
+        readChar = rxValue[i];
+
+        debugPrintln(""+readChar);
+      }
+      // sendChesslinkAnswer(incomingMessage);
+    }
+  }
+};
+
+void initBleServicePegasus()
 {
   //Bluetooth BLE initialization for mode B boards
   //esp_log_level_set("*", ESP_LOG_VERBOSE);
 
   //Register and initialize BLE Transparent UART Mode.
-  BLEDevice::init("MILLENNIUM CHESS");
+  BLEDevice::deinit(true);
+  BLEDevice::init("DGT Pegasus");
   BLEDevice::setMTU(517);
   // BLEDevice::setMTU(192);
+
+  // Create the BLE Server
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacksPegasus());
+
+  // Create the BLE Service for Transparent UART Mode.
+  pService = pServer->createService("6E400001-B5A3-F393-E0A9-E50E24DCCA9E"); // Nordic BLE Service
+  // pService = pServer->createService("49535343-fe7d-4ae5-8fa9-9fafd205e455");
+
+  // Create a BLE Characteristic for TX data
+  pTxCharacteristic = pService->createCharacteristic("6E400003-B5A3-F393-E0A9-E50E24DCCA9E", BLECharacteristic::PROPERTY_NOTIFY); // Nordic TX Characteristic
+  // pTxCharacteristic = pService->createCharacteristic("49535343-1e4d-4bd9-ba61-23c647249616", BLECharacteristic::PROPERTY_NOTIFY);
+  pTxCharacteristic->addDescriptor(new BLE2902());
+
+  // Create a BLE Characteristic for RX data
+  BLECharacteristic *pRxCharacteristic = pService->createCharacteristic("6E400002-B5A3-F393-E0A9-E50E24DCCA9E", BLECharacteristic::PROPERTY_WRITE); // Nordic RX Characteristic
+  // BLECharacteristic *pRxCharacteristic = pService->createCharacteristic("49535343-8841-43f4-a8d4-ecbe34729bb3", BLECharacteristic::PROPERTY_WRITE);
+  pRxCharacteristic->setCallbacks(new MyCallbacksPegasus());
+
+  // Start the service
+  pService->start();
+  // Advertise the service
+  pServer->getAdvertising()->start();
+
+}
+
+void initBleServiceChesslink()
+{
+  //Bluetooth BLE initialization for mode B boards
+  //esp_log_level_set("*", ESP_LOG_VERBOSE);
+
+  //Register and initialize BLE Transparent UART Mode.
+  BLEDevice::deinit(true);
+  BLEDevice::init("MILLENNIUM CHESS");
+  BLEDevice::setMTU(517);
 
   // Create the BLE Server
   pServer = BLEDevice::createServer();
@@ -517,13 +634,16 @@ void initBleService()
 
   // Create a BLE Characteristic for RX data
   BLECharacteristic *pRxCharacteristic = pService->createCharacteristic("49535343-8841-43f4-a8d4-ecbe34729bb3", BLECharacteristic::PROPERTY_WRITE);
-  pRxCharacteristic->setCallbacks(new MyCallbacks());
+  pRxCharacteristic->setCallbacks(new MyCallbacksChesslink());
 
   // Start the service
   pService->start();
   // Advertise the service
   pServer->getAdvertising()->start();
 
+  //semaphore to handle data over BLE
+  sendBLEsemaphore = xSemaphoreCreateMutex();
+  xSemaphoreGive(sendBLEsemaphore);
 }
 
 void initSerialPortCommunication(void)
@@ -566,7 +686,25 @@ void initSerialPortCommunication(void)
     }
     if(connection == BLE)
     {
-      initBleService();
+      initBleServiceChesslink();
+    }
+  }
+  // DGT Pegasus:
+  if (chessBoard.emulation == 2)
+  {
+    if (connection == USB)
+    {
+      // Serial.end();
+      Serial.begin(38400, SERIAL_7O1);
+    }
+    if(connection == BT)
+    {
+      // SerialBT.end();
+      SerialBT.begin("DGT Pegasus BT");
+    }
+    if(connection == BLE)
+    {
+      initBleServicePegasus();
     }
   }
 }
@@ -919,6 +1057,15 @@ static void event_handler(lv_event_t *e)
         chessBoard.emulation = 0;
       }
     }
+#ifdef PEGASUS
+    if (obj == pegasusCB)
+    {
+      if ((lv_obj_get_state(pegasusCB) & LV_STATE_CHECKED) == 1)
+      {
+        chessBoard.emulation = 2;
+      }
+    }
+#endif
     if (obj == chesslinkCB)
     {
       if ((lv_obj_get_state(chesslinkCB) & LV_STATE_CHECKED) == 1)
@@ -1043,6 +1190,18 @@ void createSettingsScreen()
   lv_label_set_text(object, "Emulation:");
   lv_obj_add_style(object, &fLargeStyle, 0);   // was f28Style
 
+  chesslinkCB = lv_checkbox_create(content);
+  lv_checkbox_set_text(chesslinkCB, "Millennium/Chesslink");
+  lv_obj_add_event_cb(chesslinkCB, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_add_style(chesslinkCB, &fMediumStyle, 0);
+
+#ifdef PEGASUS
+  pegasusCB = lv_checkbox_create(content);
+  lv_checkbox_set_text(pegasusCB, "DGT Pegasus");
+  lv_obj_add_event_cb(pegasusCB, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_add_style(pegasusCB, &fMediumStyle, 0);
+#endif
+
   /*Create a container for Certabo Settings */
   object = lv_obj_create(content);
   lv_obj_set_size(object, 260, 30);
@@ -1064,20 +1223,19 @@ void createSettingsScreen()
   lv_obj_add_event_cb(certaboCalibCB, event_handler, LV_EVENT_ALL, NULL);
   lv_obj_add_style(certaboCalibCB, &fMediumStyle, 0);
 
-  chesslinkCB = lv_checkbox_create(content);
-  lv_checkbox_set_text(chesslinkCB, "Millennium/Chesslink");
-  lv_obj_add_event_cb(chesslinkCB, event_handler, LV_EVENT_ALL, NULL);
-  lv_obj_add_style(chesslinkCB, &fMediumStyle, 0);
-
   flippedCB = lv_checkbox_create(content);
   lv_checkbox_set_text(flippedCB, "Flip Board");
   lv_obj_add_event_cb(flippedCB, event_handler, LV_EVENT_ALL, NULL);
+#ifndef PEGASUS
   lv_obj_set_style_pad_top(flippedCB, 16, 0);
+#endif
   lv_obj_add_style(flippedCB, &fMediumStyle, 0);
 
   object = lv_label_create(content);
   lv_label_set_text(object, "Connection:");
+#ifndef PEGASUS
   lv_obj_set_style_pad_top(object, 12, 0);
+#endif
   lv_obj_add_style(object, &fLargeStyle, 0);
 
   /*Create a container for Connection Settings */
@@ -1151,7 +1309,7 @@ void createSettingsScreen()
 #else
   lv_slider_set_range(brightnessSlider, 5, 255);
 #endif
-  lv_slider_set_value(brightnessSlider, 255, LV_ANIM_ON);
+  lv_slider_set_value(brightnessSlider, brightness, LV_ANIM_ON);
   lv_obj_add_event_cb(brightnessSlider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
   // calibrateBtn = lv_btn_create(content);
@@ -1365,7 +1523,6 @@ void setup()
 
   pinMode(TFT_BL, OUTPUT);
   gpio_hold_dis((gpio_num_t)TFT_BL); 
-  ledcWrite(0, brightness);
 
   // digitalWrite(TFT_BL, HIGH);    
 
@@ -1385,6 +1542,7 @@ void setup()
   chessBoard.startPosition(0);
   connection = USB;
   loadBoardSettings();
+  ledcWrite(0, brightness);
   // if(chessBoard.emulation == 0 && connection == BLE)
   //   connection = USB;
 
@@ -1444,6 +1602,7 @@ void loop()
 
 #ifdef LOLIN_D32
   static long long oldMillis=-10000;
+  static long long oldMessageMillis=-10000;
   unsigned long actMillis;
   actMillis = millis();
   if(actMillis-oldMillis>10000) {
@@ -1634,14 +1793,15 @@ void loop()
 
   // After the whole board is read and any change is regarded, the Serial Board message is re-generated:
   chessBoard.generateSerialBoardMessage();
-  if(connection == BLE && chessBoard.emulation==1)
-  {
-    chessBoard.boardMessage[65]=0;
-  }
+  // if(connection == BLE && chessBoard.emulation==1)
+  // {
+  //   chessBoard.boardMessage[65]=0;
+  // }
 
-  if (lifted > 0 || setBack > 0 || chessBoard.emulation == 0) // Certabo boards sends position even when no change happend
+  if (lifted > 0 || setBack > 0 || chessBoard.emulation == 0 )//|| ((actMillis-oldMessageMillis>4000) && millBLEinitialized)) // Certabo boards sends position even when no change happend
   { 
     sendMessageToChessBoard(chessBoard.boardMessage);
+    oldMessageMillis = actMillis;
   }
   if (chessBoard.emulation == 0 && rows == 0)
   {
