@@ -18,7 +18,7 @@
 */
 
 #define VERSION     "Open Mephisto 1.3 beta"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Feb 16th, 2022"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Feb 27th, 2022"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -42,6 +42,7 @@
 
 #define LOLIN_D32
 #define LED_TIME 300
+#define MIN_BRIGHTNESS 190
 
 #define TOUCH_PANEL_IRQ_PIN   GPIO_NUM_34   // The idea is to check if there is a signal change on this pin for waking ESP32 from sleep! Works! Pin is high when no touch, low when touch!
 
@@ -108,7 +109,7 @@ lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB, *pegasusCB;
-lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider;
+lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider, *connectionLbl;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void assembleIncomingChesslinkMessage(char readChar)
@@ -275,9 +276,9 @@ void loadBoardSettings(void)
       }
       if (f.readBytes((char *)tempInt8, 1) == 1)
       {
-        if(tempInt8[0] < 190)
+        if(tempInt8[0] < MIN_BRIGHTNESS)
         {
-          brightness = 190;
+          brightness = MIN_BRIGHTNESS;
         }
         else
         {
@@ -311,7 +312,7 @@ void sendMessageToChessBoard(const char *message)
   std::string codedMessage = message;
   char blockCode[3];
 
-  debugPrint("Message to be sent from Board to Application: ");
+  debugPrintln("Message to be sent from Board to Application: ");
   debugPrintln(message);
 
   if (chessBoard.emulation == 1)
@@ -707,6 +708,22 @@ void initSerialPortCommunication(void)
       initBleServicePegasus();
     }
   }
+  // Update UI:
+  if(connection == USB) 
+  {
+    lv_obj_add_state(usbCB, LV_STATE_CHECKED);
+    lv_label_set_text(connectionLbl, LV_SYMBOL_USB);
+  }
+  if(connection == BT) 
+  {
+    lv_obj_add_state(btCB, LV_STATE_CHECKED);
+    lv_label_set_text(connectionLbl, LV_SYMBOL_BLUETOOTH);
+  }
+  if(connection == BLE) 
+  {
+    lv_obj_add_state(bleCB, LV_STATE_CHECKED);
+    lv_label_set_text(connectionLbl, LV_SYMBOL_BLUETOOTH);
+  }  
 }
 
 void resetOldBoard()
@@ -948,30 +965,45 @@ void switchOff(void)
   tft.writecommand(0x10); // TFT Display Sleep mode on
   // tft.writecommand(0x28);       // TFT Display Off
 
-  // pinMode(GPIO_NUM_16, OUTPUT);
   ledcDetachPin(TFT_BL);
-  digitalWrite(GPIO_NUM_16, LOW); // Switch off backlight, somehow does not work with ILI9488 Display???
 
   for(int i = 0; i<8; i++)
   {
     mephisto.writeRow(i, 0);
   }
 
-  rtc_gpio_isolate(gpio_num_t(ROW_LE));
-  rtc_gpio_isolate(gpio_num_t(LDC_LE));
+  // rtc_gpio_isolate(gpio_num_t(ROW_LE));
+  // rtc_gpio_isolate(gpio_num_t(LDC_LE));
 
   // rtc_gpio_hold_en(gpio_num_t(LDC_EN));
   // rtc_gpio_hold_en(gpio_num_t(CB_EN));
 
-  rtc_gpio_isolate(gpio_num_t(LDC_EN));
-  rtc_gpio_isolate(gpio_num_t(CB_EN));
+  // rtc_gpio_isolate(gpio_num_t(LDC_EN));
+  // rtc_gpio_isolate(gpio_num_t(CB_EN));
 
-  delay(500);
+  // pinMode(GPIO_NUM_16, OUTPUT);
+  digitalWrite(GPIO_NUM_16, LOW); // Switch off backlight, somehow does not work with ILI9488 Display???
+
+  // rtc_gpio_hold_en(gpio_num_t(GPIO_NUM_16));
 
   esp_sleep_enable_ext0_wakeup(TOUCH_PANEL_IRQ_PIN, LOW);
+  delay(500);
+    
+  BLEDevice::deinit(false);
+  esp_light_sleep_start();
+  // esp_sleep_enable_timer_wakeup(10);
+  // esp_deep_sleep_start();
 
-  gpio_deep_sleep_hold_en();
-  esp_deep_sleep_start();
+// After Wakeup:
+
+  lv_scr_load(screenMain);
+  loadBoardSettings();
+  initSerialPortCommunication();
+  ledcAttachPin(TFT_BL, 0);
+  ledcWrite(0, brightness);
+  tft.writecommand(0x11);       // TFT Sleep Off
+  // ESP.restart();
+
 }
 
 static void event_handler(lv_event_t *e)
@@ -1028,27 +1060,21 @@ static void event_handler(lv_event_t *e)
   {
     if (obj == usbCB)
     {
-      if ((lv_obj_get_state(usbCB) & LV_STATE_CHECKED) == 1)
-      {
-        lv_obj_clear_state(btCB, LV_STATE_CHECKED);
-        lv_obj_clear_state(bleCB, LV_STATE_CHECKED);
-      }
+      lv_obj_add_state(usbCB, LV_STATE_CHECKED);
+      lv_obj_clear_state(btCB, LV_STATE_CHECKED);
+      lv_obj_clear_state(bleCB, LV_STATE_CHECKED);
     }
     if (obj == bleCB)
     {
-      if ((lv_obj_get_state(bleCB) & LV_STATE_CHECKED) == 1)
-      {
-        lv_obj_clear_state(usbCB, LV_STATE_CHECKED);
-        lv_obj_clear_state(btCB, LV_STATE_CHECKED);
-      }
+      lv_obj_clear_state(usbCB, LV_STATE_CHECKED);
+      lv_obj_clear_state(btCB, LV_STATE_CHECKED);
+      lv_obj_add_state(bleCB, LV_STATE_CHECKED);
     }
     if (obj == btCB)
     {
-      if ((lv_obj_get_state(btCB) & LV_STATE_CHECKED) == 1)
-      {
-        lv_obj_clear_state(usbCB, LV_STATE_CHECKED);
-        lv_obj_clear_state(bleCB, LV_STATE_CHECKED);
-      }
+      lv_obj_clear_state(usbCB, LV_STATE_CHECKED);
+      lv_obj_add_state(btCB, LV_STATE_CHECKED);
+      lv_obj_clear_state(bleCB, LV_STATE_CHECKED);
     }
     if (obj == certaboCB)
     {
@@ -1403,6 +1429,12 @@ void createUI()
   lv_style_set_bg_opa(&light_square, LV_OPA_COVER);
   lv_style_set_border_width(&light_square, 0);
 
+  connectionLbl = lv_label_create(screenMain);
+  lv_obj_set_style_text_align(connectionLbl, LV_TEXT_ALIGN_RIGHT, 0);
+  lv_obj_set_size(connectionLbl, 29, 20);
+  lv_obj_set_pos(connectionLbl, 442, 75);
+  lv_obj_add_style(connectionLbl, &fLargeStyle, 0);  
+
   // Create Chessboard
 
   int i;
@@ -1518,13 +1550,12 @@ void setup()
   digitalWrite(POWER_SAVE_PIN, HIGH);
 */
 
+  // digitalWrite(TFT_BL, HIGH);    
   ledcSetup(0, 5000, 8);
   ledcAttachPin(TFT_BL, 0);
 
   pinMode(TFT_BL, OUTPUT);
   gpio_hold_dis((gpio_num_t)TFT_BL); 
-
-  // digitalWrite(TFT_BL, HIGH);    
 
   // digitalWrite(GPIO_NUM_16, LOW);    
 /*
@@ -1561,28 +1592,6 @@ void setup()
   createUI();
 
   createSettingsScreen();
-
-  object = lv_label_create(screenMain);
-  lv_obj_set_style_text_align(object, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_obj_set_size(object, 29, 20);
-  lv_obj_set_pos(object, 442, 75);
-  lv_obj_add_style(object, &fLargeStyle, 0);  
-
-  if(connection == USB) 
-  {
-    lv_obj_add_state(usbCB, LV_STATE_CHECKED);
-    lv_label_set_text(object, LV_SYMBOL_USB);
-  }
-  if(connection == BT) 
-  {
-    lv_obj_add_state(btCB, LV_STATE_CHECKED);
-    lv_label_set_text(object, LV_SYMBOL_BLUETOOTH);
-  }
-  if(connection == BLE) 
-  {
-    lv_obj_add_state(bleCB, LV_STATE_CHECKED);
-    lv_label_set_text(object, LV_SYMBOL_BLUETOOTH);
-  }
 
   initSerialPortCommunication();
 
