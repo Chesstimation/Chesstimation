@@ -17,8 +17,8 @@
     along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Open Mephisto 1.3 beta"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Feb 27th, 2022"
+#define VERSION     "Open Mephisto 1.3"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: March 6th, 2022"
 
 #include <Arduino.h>
 #include <SPIFFS.h>
