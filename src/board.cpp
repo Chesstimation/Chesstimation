@@ -39,7 +39,7 @@ void Board::extinguishMilleniumLEDs(void) {
 
 void Board::updateMilleniumLEDs(const char* ledMessage) {
     uint16_t messageIdx;
-    byte high, low;
+    byte high, low, result;
     messageIdx = 2;
     for(byte col=0; col<9; col++) {
         for(byte row=0; row<9; row++) {
@@ -48,7 +48,10 @@ void Board::updateMilleniumLEDs(const char* ledMessage) {
             if(ledMessage[messageIdx]>='A' && ledMessage[messageIdx]<='F') high = ledMessage[messageIdx]-55;
             if(ledMessage[messageIdx+1]>='0' && ledMessage[messageIdx+1]<='9') low = ledMessage[messageIdx+1]-48;
             if(ledMessage[messageIdx+1]>='A' && ledMessage[messageIdx+1]<='F') low = ledMessage[messageIdx+1]-55;
-            milleniumLEDs[8-col][8-row]=(high<<4)+low;
+            result = (high<<4)+low;
+            // if(result==0x55) result = 0x33;
+            // if(result==0xFF) result = 0xCC;
+            milleniumLEDs[8-col][8-row]=result;
             // if(milleniumLEDs[8-col][8-row]>0) milleniumLEDs[8-col][8-row]=0xFF; // Fix for alternate LED bug in BearChess
             messageIdx+=2;
         }

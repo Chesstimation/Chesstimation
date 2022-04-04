@@ -19,7 +19,7 @@
 
 #include <Arduino.h>
 
-#define LATCH_WAIT 1
+#define LATCH_WAIT 10
 
 // Lolin D32 Module:
 #define LDC_EN   2    // BLACK  - connects to pin 29 of 40 pin connector
