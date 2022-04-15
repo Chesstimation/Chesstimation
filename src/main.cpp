@@ -1571,7 +1571,7 @@ void setup()
 */
 
   chessBoard.startPosition(0);
-  connection = USB;
+  connection = BLE;
   loadBoardSettings();
   ledcWrite(0, brightness);
   // if(chessBoard.emulation == 0 && connection == BLE)

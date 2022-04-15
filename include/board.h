@@ -72,7 +72,7 @@
 class Board
 {
 public:
-    byte emulation  = 0; // 0=Certabo, 1=Chesslink, 2=DGT Pegasus
+    byte emulation  = 1; // 0=Certabo, 1=Chesslink, 2=DGT Pegasus
     byte flipped    = 0;
 
     // piece[64] stores, at which index position of the board which piece is located
