@@ -32,24 +32,20 @@ void Mephisto::initPorts()
   pinMode(LDC_EN, OUTPUT);
   pinMode(CB_EN, OUTPUT);
 
+  digitalWrite(CB_EN, HIGH); // only low to read out reed switches!
   digitalWrite(LDC_EN, LOW);
+
   digitalWrite(ROW_LE, LOW);
   digitalWrite(LDC_LE, LOW);
-  digitalWrite(CB_EN, HIGH); // only low to read out reed switches!
 }
 
+// readRow: byte row can only have values from 0 to 7
 byte Mephisto::readRow(byte row)
 {
   byte rowResult;
 
-  digitalWrite(LDC_EN, LOW);
-  digitalWrite(ROW_LE, LOW);
-  digitalWrite(LDC_LE, LOW);
-  digitalWrite(CB_EN, HIGH);
-
-  delayMicroseconds(LATCH_WAIT);
-
-  // select row to read:
+  // 1st STEP: Select row to read:
+  digitalWrite(ROW_LE, HIGH);
   for (byte i = 0; i < 8; i++)
   {
     pinMode(bytePort[i], OUTPUT);
@@ -62,31 +58,23 @@ byte Mephisto::readRow(byte row)
       digitalWrite(bytePort[i], HIGH);
     }
   }
-  digitalWrite(ROW_LE, HIGH);
   delayMicroseconds(LATCH_WAIT);
   digitalWrite(ROW_LE, LOW);
+  delayMicroseconds(LATCH_WAIT);
 
-  delayMicroseconds(LATCH_WAIT); 
-  // set all columns to LOW:
+  // 2nd STEP: Set all columns to LOW:
+  digitalWrite(LDC_LE, HIGH);
   for (byte i = 0; i < 8; i++)
   {
     digitalWrite(bytePort[i], LOW);
   }
   delayMicroseconds(LATCH_WAIT); 
-  
-  digitalWrite(LDC_LE, HIGH);
-  delayMicroseconds(LATCH_WAIT);
   digitalWrite(LDC_LE, LOW);
-
   delayMicroseconds(LATCH_WAIT); 
 
-  digitalWrite(LDC_EN, HIGH);
-  delayMicroseconds(LATCH_WAIT); // fix for older Exclusive boards
-  digitalWrite(LDC_EN, LOW);
-
-  delayMicroseconds(LATCH_WAIT); 
-
-  digitalWrite(CB_EN, LOW);
+  // 3rd STEP: Read out read switches of selected row:
+  digitalWrite(CB_EN, LOW);     // Enable 
+  digitalWrite(LDC_EN, HIGH);   // Disable LED output Latch
   delayMicroseconds(LATCH_WAIT); // Mandatory to work!
 
   rowResult = 0;
@@ -95,7 +83,9 @@ byte Mephisto::readRow(byte row)
     pinMode(bytePort[i], INPUT);
     rowResult += (digitalRead(bytePort[i])) << i;
   }
+  delayMicroseconds(LATCH_WAIT); // Mandatory to work!
   digitalWrite(CB_EN, HIGH);
+  digitalWrite(LDC_EN, LOW);
 
   return ~rowResult;
 }
@@ -103,14 +93,8 @@ byte Mephisto::readRow(byte row)
 void Mephisto::writeRow(byte row, byte value)
 {
 
-  digitalWrite(CB_EN, HIGH);  
-  digitalWrite(ROW_LE, LOW);
-  digitalWrite(LDC_LE, LOW);
-  digitalWrite(LDC_EN, HIGH);
-
-  delayMicroseconds(LATCH_WAIT);
-
-  // select row:
+  // 1st STEP: Select row to write LED pattern:
+  digitalWrite(ROW_LE, HIGH);
   for (byte i = 0; i < 8; i++)
   {
     pinMode(bytePort[i], OUTPUT);
@@ -123,19 +107,18 @@ void Mephisto::writeRow(byte row, byte value)
       digitalWrite(bytePort[i], HIGH);
     }
   }
-  digitalWrite(ROW_LE, HIGH);
   delayMicroseconds(LATCH_WAIT);
   digitalWrite(ROW_LE, LOW);
   delayMicroseconds(LATCH_WAIT);
 
-  // select column:
+
+  // 2nd STEP: Write byte into selected row:
+  digitalWrite(LDC_LE, HIGH);
   for (byte i = 0; i < 8; i++)
   {
     digitalWrite(bytePort[i], ((value >> i) & 0x1));
   }
-  digitalWrite(LDC_LE, HIGH);
   delayMicroseconds(LATCH_WAIT);
   digitalWrite(LDC_LE, LOW);
   delayMicroseconds(LATCH_WAIT);
-  digitalWrite(LDC_EN, LOW);
 }
