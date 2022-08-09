@@ -17,8 +17,9 @@
     along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Open Mephisto 1.3"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: March 6th, 2022"
+#define VERSION     "Open Mephisto 1.3.6"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: July 22nd, 2022"
+// #define BOARD_TEST
 
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -29,6 +30,10 @@
 
 #include <BLEDevice.h>
 #include <BLE2902.h>
+
+// For emulations:
+#include <thread>
+#include <chrono>
 
 // my includes:
 
@@ -63,6 +68,7 @@ byte readRawRow[8];
 byte led_buffer[8];
 byte mephistoLED[8][8];
 byte eeprom[5]={0,20,3,20,15};
+byte LED_startup_sequence[64] = {0,1,2,3,4,5,6,7,15,23,31,39,47,55,63,62,61,60,59,58,57,56,48,40,32,24,16,8, 9,10,11,12,13,14,22,30,38,46,54,53,52,51,50,49,41,33,25,17, 18,19,20,21,29,37,45,44,43,42,34,26, 27,28,36,35};
 byte oldBoard[64];
 int brightness = 255;
 
@@ -81,8 +87,9 @@ std::string replyString;
 TFT_eSPI tft = TFT_eSPI();
 
 #define DISP_BUF_SIZE (320 * 80)
-// #define DISP_BUF_SIZE (480 * 40)
+// #define DISP_BUF_SIZE (480 * 10)
 static lv_disp_draw_buf_t disp_buf;
+
 static lv_color_t buf[DISP_BUF_SIZE];
 
 static lv_style_t fMediumStyle;
@@ -108,9 +115,18 @@ lv_disp_drv_t disp_drv;
 lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
-lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB, *pegasusCB;
-lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider, *connectionLbl;
+lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB, *pegasusCB, *testCB;
+lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider, *connectionLbl, *emulatorsBtn;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
+
+void displayLEDstartUpSequence()
+{
+  for(int i=0; i<64; i++)
+  {
+    mephisto.writeRow(getRowFromBoardIndex(LED_startup_sequence[i]), 0x1 << getColFromBoardIndex(LED_startup_sequence[i]));
+    delay(48);
+  }
+}
 
 void assembleIncomingChesslinkMessage(char readChar)
 {
@@ -439,7 +455,7 @@ void sendChesslinkAnswer(char *incomingMessage)
   {
     debugPrint("Detected valid incoming Version Request Message V: ");
     debugPrintln(incomingMessage);
-    sendMessageToChessBoard("v0021");  // identify as Millennium Exclusive board
+    sendMessageToChessBoard("v0244");  // identify as Millennium Exclusive board
     return;
   }
   if (strlen(incomingMessage) == 5 && incomingMessage[0] == 'R')
@@ -491,6 +507,11 @@ void sendChesslinkAnswer(char *incomingMessage)
     debugPrint("Detected incoming set LED Message L: ");
     debugPrintln(incomingMessage);
     sendMessageToChessBoard("l");
+    // Does not help to get the LEDs work with the Chess Link App:
+    // chessBoard.generateSerialBoardMessage();
+    // sendMessageToChessBoard(chessBoard.boardMessage);
+    // sendMessageToChessBoard(chessBoard.boardMessage);
+    // sendMessageToChessBoard(chessBoard.boardMessage);
 
     incomingMessage[165] = 0;
     chessBoard.updateMilleniumLEDs((&incomingMessage[1]));
@@ -509,13 +530,14 @@ void sendChesslinkAnswer(char *incomingMessage)
     }
     debugPrintln("");
     updateMephistoLEDs(mephistoLED);
+    millBLEinitialized = 1;
     return;
   }
   if (strlen(incomingMessage) == 3 && incomingMessage[0] == 'I')
   {
     debugPrint("Detected incoming Message I: ");
     debugPrintln(incomingMessage);
-    sendMessageToChessBoard("i0055mm\n");  // Tournament 55 board
+    sendMessageToChessBoard("i00e-one\n");  // Tournament 55 board
     return;
   }
   if (strlen(incomingMessage) == 3 && (strcmp(incomingMessage, "X58") == 0))
@@ -967,11 +989,6 @@ void switchOff(void)
 
   ledcDetachPin(TFT_BL);
 
-  for(int i = 0; i<8; i++)
-  {
-    mephisto.writeRow(i, 0);
-  }
-
   // rtc_gpio_isolate(gpio_num_t(ROW_LE));
   // rtc_gpio_isolate(gpio_num_t(LDC_LE));
 
@@ -981,13 +998,19 @@ void switchOff(void)
   // rtc_gpio_isolate(gpio_num_t(LDC_EN));
   // rtc_gpio_isolate(gpio_num_t(CB_EN));
 
-  // pinMode(GPIO_NUM_16, OUTPUT);
-  digitalWrite(GPIO_NUM_16, LOW); // Switch off backlight, somehow does not work with ILI9488 Display???
+  // pinMode(TFT_BL, OUTPUT);
+  digitalWrite(TFT_BL, LOW); // Switch off backlight, somehow does not work with ILI9488 Display???
 
   // rtc_gpio_hold_en(gpio_num_t(GPIO_NUM_16));
 
   esp_sleep_enable_ext0_wakeup(TOUCH_PANEL_IRQ_PIN, LOW);
-  delay(500);
+
+  displayLEDstartUpSequence();
+  // Switch all LEDs off before going into sleep mode:
+  for(int i = 0; i<8; i++)
+  {
+    mephisto.writeRow(i, 0);
+  }
     
   BLEDevice::deinit(false);
   esp_light_sleep_start();
@@ -1002,6 +1025,7 @@ void switchOff(void)
   ledcAttachPin(TFT_BL, 0);
   ledcWrite(0, brightness);
   tft.writecommand(0x11);       // TFT Sleep Off
+
   // ESP.restart();
 
 }
@@ -1040,10 +1064,14 @@ static void event_handler(lv_event_t *e)
     {
       lv_scr_load(settingsScreen);
     }
-    if (obj == settingsBtn)
+    /*
+    if (obj == emulatorsBtn)
     {
-      lv_scr_load(settingsScreen);
+      create_Mephisto_MM_Screen();
+      lv_scr_load(mm_screen);
+      startMephistoEmulation();
     }
+    */
     if (obj == restartBtn)
     {
       chessBoard.startPosition(lv_obj_get_state(certaboCalibCB) & LV_STATE_CHECKED);
@@ -1252,6 +1280,7 @@ void createSettingsScreen()
   flippedCB = lv_checkbox_create(content);
   lv_checkbox_set_text(flippedCB, "Flip Board");
   lv_obj_add_event_cb(flippedCB, event_handler, LV_EVENT_ALL, NULL);
+
 #ifndef PEGASUS
   lv_obj_set_style_pad_top(flippedCB, 16, 0);
 #endif
@@ -1338,6 +1367,12 @@ void createSettingsScreen()
   lv_slider_set_value(brightnessSlider, brightness, LV_ANIM_ON);
   lv_obj_add_event_cb(brightnessSlider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
+#ifdef BOARD_TEST
+  testCB = lv_checkbox_create(content);
+  lv_checkbox_set_text(testCB, "BOARD TEST");
+  lv_obj_add_event_cb(testCB, event_handler, LV_EVENT_ALL, NULL);
+#endif
+
   // calibrateBtn = lv_btn_create(content);
   // label = lv_label_create(calibrateBtn);
   // lv_label_set_text(label, "Calibrate Touch");
@@ -1401,7 +1436,19 @@ void createUI()
   lv_obj_set_size(debugLbl, 144, 40);
   lv_obj_set_pos(debugLbl, 325, 230);
   lv_obj_add_style(debugLbl, &fMediumStyle, 0);  
-  
+
+#ifdef LEGACY_EMULATION  
+  emulatorsBtn = lv_btn_create(screenMain);
+  lv_obj_add_event_cb(emulatorsBtn, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_set_size(emulatorsBtn, 120, 40);
+  lv_obj_set_pos(emulatorsBtn, 340, 200);
+
+  lv_obj_t * label2 = lv_label_create(emulatorsBtn);
+  lv_label_set_text(label2, "Emulator");
+  lv_obj_set_align(label2, LV_ALIGN_CENTER);
+  lv_obj_add_style(emulatorsBtn, &fMediumStyle, 0);
+#endif
+
   settingsBtn = lv_btn_create(screenMain);
   lv_obj_add_event_cb(settingsBtn, event_handler, LV_EVENT_ALL, NULL);
   lv_obj_set_size(settingsBtn, 120, 40);
@@ -1456,6 +1503,7 @@ void createUI()
         lv_obj_add_style(square[i], &dark_square, 0);
     }
   }
+  
   for (int i = 0; i < 8; i++)
   {
     wp[i] = lv_img_create(screenMain);
@@ -1570,14 +1618,15 @@ void setup()
   gpio_hold_dis(GPIO_NUM_2);
 */
 
+  mephisto.initPorts();
+  // displayLEDstartUpSequence();
+
   chessBoard.startPosition(0);
   connection = BLE;
   loadBoardSettings();
   ledcWrite(0, brightness);
   // if(chessBoard.emulation == 0 && connection == BLE)
   //   connection = USB;
-
-  mephisto.initPorts();
 
   for (int i = 0; i < 8; i++)
   {
@@ -1586,6 +1635,8 @@ void setup()
 
   chessBoard.generateSerialBoardMessage();
   // chessBoard.copyPieceSetupToRaw(chessBoard.lastRawRow);
+
+  // buf = (lv_color_t*) malloc(DISP_BUF_SIZE);
 
   initLVGL();
 
@@ -1645,6 +1696,32 @@ void loop()
 #endif  
 
   lv_task_handler();
+
+#ifdef BOARD_TEST
+  if ((lv_obj_get_state(testCB) & LV_STATE_CHECKED) == 1)
+  {
+    static int i = 0;
+    {
+      mephisto.writeRow(i, 0xff);
+      delay(500);
+      lv_task_handler();
+
+      mephisto.writeRow(i, 0x00);
+      delay(100);
+      lv_task_handler();
+      int value = mephisto.readRow(i);
+      if(1)//value != 0)
+      {
+        mephisto.writeRow(i, value);
+        delay(500);
+      }
+    }
+    i++;
+    if (i > 7)
+      i = 0;
+    return;
+  }
+#endif
 
   if (chessBoard.emulation == 0) // Certabo!
   {
@@ -1807,7 +1884,7 @@ void loop()
   //   chessBoard.boardMessage[65]=0;
   // }
 
-  if (lifted > 0 || setBack > 0 || chessBoard.emulation == 0 )//|| ((actMillis-oldMessageMillis>4000) && millBLEinitialized)) // Certabo boards sends position even when no change happend
+  if (lifted > 0 || setBack > 0 || chessBoard.emulation == 0 )//|| ((actMillis-oldMessageMillis>62) && millBLEinitialized)) // Certabo boards sends position even when no change happend
   { 
     sendMessageToChessBoard(chessBoard.boardMessage);
     oldMessageMillis = actMillis;
