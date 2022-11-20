@@ -1,6 +1,6 @@
 **Deutsch** | [English](./README.md) |
 
-# Open Mephisto
+# Chesstimation
 
 In diesem Projekt wird ein neues Modul für alte Mephisto Schachbretter der Modular, Exclusive und München-Serie entwickelt.
 Mein Ziel war es, hier nur die aktuellsten Technologien wie Touch-Display, Akkubetrieb, drahtlose Kommunikation und USB-C zu verwenden.
@@ -189,7 +189,7 @@ Software development is done in C++ using:
 * Platform IO
 
 In Platform IO you need to install 2 additional libraries for this project:
-* LVGL 8.2 (you need to use Open Mephisto's lv_conf.h)
+* LVGL 8.3.2 (you need to use Chesstimation's lv_conf.h)
 * TFT eSPI 2.4.35 (you need to use chess-module-display.h as User_Setup.h)
 
 For flashing the firmware to the Lolin D32 without Platform IO I use ESP Flasher: https://github.com/Jason2866/ESP_Flasher/releases
