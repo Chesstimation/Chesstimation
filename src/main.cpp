@@ -1,24 +1,24 @@
 /*  
     Copyright 2021, 2022 Andreas Petersik (andreas.petersik@gmail.com)
     
-    This file is part of the Open Mephisto Project.
+    This file is part of the Chesstimation Project.
 
-    Open Mephisto is free software: you can redistribute it and/or modify
+    Chesstimation is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Open Mephisto is distributed in the hope that it will be useful,
+    Chesstimation is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
+    along with Chesstimation.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Open Mephisto 1.3.6"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: July 22nd, 2022"
+#define VERSION     "Chesstimation 1.3.7"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: November 20th, 2022"
 // #define BOARD_TEST
 
 #include <Arduino.h>
@@ -680,7 +680,7 @@ void initSerialPortCommunication(void)
   else if (connection != BT)
   {
     // SerialBT.end();
-    SerialBT.begin("Open Mephisto DEBUG");
+    SerialBT.begin("Chesstimation DEBUG");
   }
   if (chessBoard.emulation == 0)
   {
@@ -1399,7 +1399,7 @@ void createUI()
   // lv_style_set_text_font(&fSmallStyle, &lv_font_montserrat_10);
     
   lv_style_init(&fMediumStyle);
-  lv_style_set_text_font(&fMediumStyle, &lv_font_montserrat_18);
+  lv_style_set_text_font(&fMediumStyle, &lv_font_montserrat_20);
     
   lv_style_init(&fLargeStyle);
   lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);  // was 22
@@ -1408,12 +1408,12 @@ void createUI()
   lv_style_set_text_font(&fExtraLargeStyle, &lv_font_montserrat_28); // was 28
     
   object = lv_label_create(screenMain);
-  lv_label_set_text(object, "Open\nMephisto");
+  lv_label_set_text(object, "Chesstimation");
   lv_obj_set_style_text_align(object, LV_TEXT_ALIGN_LEFT, 0);
-  lv_obj_set_size(object, 140, 55);
-  lv_obj_set_pos(object, 333, 5);
-  lv_label_set_long_mode(object, LV_LABEL_LONG_WRAP);
-  lv_obj_add_style(object, &fExtraLargeStyle, 0);  
+  lv_obj_set_size(object, 151, 55);
+  lv_obj_set_pos(object, 327, 35);
+  // lv_label_set_long_mode(object, LV_LABEL_LONG_WRAP);
+  lv_obj_add_style(object, &fMediumStyle, 0);  
   
   #ifdef LOLIN_D32
   batteryLbl = lv_label_create(screenMain);
@@ -1428,7 +1428,7 @@ void createUI()
   lv_obj_set_style_text_align(liftedPiecesStringLbl, LV_TEXT_ALIGN_LEFT, 0);
   lv_obj_set_size(liftedPiecesStringLbl, 135, 160);
   lv_obj_set_pos(liftedPiecesStringLbl, 330, 100);
-  lv_obj_add_style(liftedPiecesStringLbl, &fLargeStyle, 0);    // was f28Style    
+  lv_obj_add_style(liftedPiecesStringLbl, &fMediumStyle, 0);    // was f28Style    
   
   debugLbl = lv_label_create(screenMain);
   lv_label_set_text(debugLbl, "");
@@ -1598,11 +1598,11 @@ void setup()
   digitalWrite(POWER_SAVE_PIN, HIGH);
 */
 
+  pinMode(TFT_BL, OUTPUT);
   // digitalWrite(TFT_BL, HIGH);    
   ledcSetup(0, 5000, 8);
   ledcAttachPin(TFT_BL, 0);
 
-  pinMode(TFT_BL, OUTPUT);
   gpio_hold_dis((gpio_num_t)TFT_BL); 
 
   // digitalWrite(GPIO_NUM_16, LOW);    
@@ -1623,6 +1623,7 @@ void setup()
 
   chessBoard.startPosition(0);
   connection = BLE;
+  // ledcWrite(0, 255);
   loadBoardSettings();
   ledcWrite(0, brightness);
   // if(chessBoard.emulation == 0 && connection == BLE)

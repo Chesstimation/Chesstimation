@@ -1,20 +1,20 @@
 /*  
     Copyright 2021, 2022 Andreas Petersik (andreas.petersik@gmail.com)
     
-    This file is part of the Open Mephisto Project.
+    This file is part of the Chesstimation Project.
 
-    Open Mephisto is free software: you can redistribute it and/or modify
+    Chesstimation is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Open Mephisto is distributed in the hope that it will be useful,
+    Chesstimation is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Open Mephisto.  If not, see <https://www.gnu.org/licenses/>.
+    along with Chesstimation.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <Arduino.h>
