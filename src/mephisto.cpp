@@ -63,14 +63,14 @@ byte Mephisto::readRow(byte row)
   delayMicroseconds(LATCH_WAIT);
 
   // 2nd STEP: Set all columns to LOW:
-  digitalWrite(LDC_LE, HIGH);
-  for (byte i = 0; i < 8; i++)
-  {
-    digitalWrite(bytePort[i], LOW);
-  }
-  delayMicroseconds(LATCH_WAIT); 
-  digitalWrite(LDC_LE, LOW);
-  delayMicroseconds(LATCH_WAIT); 
+  // digitalWrite(LDC_LE, HIGH);
+  // for (byte i = 0; i < 8; i++)
+  // {
+  //   digitalWrite(bytePort[i], LOW);
+  // }
+  // delayMicroseconds(LATCH_WAIT); 
+  // digitalWrite(LDC_LE, LOW);
+  // delayMicroseconds(LATCH_WAIT); 
 
   // 3rd STEP: Read out read switches of selected row:
   digitalWrite(CB_EN, LOW);     // Enable 

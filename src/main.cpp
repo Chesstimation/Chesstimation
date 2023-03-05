@@ -17,8 +17,8 @@
     along with Chesstimation.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Chesstimation 1.3.7"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: November 20th, 2022"
+#define VERSION     "Chesstimation 1.4"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 15th, 2023"
 // #define BOARD_TEST
 
 #include <Arduino.h>
@@ -61,6 +61,7 @@ Board chessBoard;
 BluetoothSerial SerialBT;
 
 int millBLEinitialized = 0;
+int physicalConformity = 0;
 
 enum connectionType {USB, BT, BLE} connection;
 
@@ -86,17 +87,17 @@ std::string replyString;
 
 TFT_eSPI tft = TFT_eSPI();
 
-#define DISP_BUF_SIZE (320 * 80)
+#define DISP_BUF_SIZE (320 * 60)
 // #define DISP_BUF_SIZE (480 * 10)
-static lv_disp_draw_buf_t disp_buf;
+lv_disp_draw_buf_t disp_buf;
 
-static lv_color_t buf[DISP_BUF_SIZE];
+lv_color_t buf[DISP_BUF_SIZE];
 
-static lv_style_t fMediumStyle;
-static lv_style_t fLargeStyle;
-static lv_style_t fExtraLargeStyle;
-static lv_style_t light_square;
-static lv_style_t dark_square;
+lv_style_t fMediumStyle;
+lv_style_t fLargeStyle;
+lv_style_t fExtraLargeStyle;
+lv_style_t light_square;
+lv_style_t dark_square;
 
 LV_IMG_DECLARE(WP40);
 LV_IMG_DECLARE(BP40);
@@ -247,6 +248,7 @@ void loadBoardSettings(void)
   byte tempBoardSetup[64];
   uint16_t tempPiecesLifted[32];
   uint8_t tempInt8[1];
+  physicalConformity = 1;
 
   if (!SPIFFS.begin())
   {
@@ -1077,6 +1079,9 @@ static void event_handler(lv_event_t *e)
       chessBoard.startPosition(lv_obj_get_state(certaboCalibCB) & LV_STATE_CHECKED);
       resetOldBoard();
       updatePiecesOnBoard();
+
+      physicalConformity = 0;
+
       lv_scr_load(screenMain);
     }
     else if (obj == exitSettingsBtn)
@@ -1808,6 +1813,62 @@ void loop()
     }
   }
 
+  // Read row status from board:
+  for(int i=0; i<8; i++) {
+    readRawRow[i] = mephisto.readRow(i);
+  }
+
+  // Check physical conformity (this is only done when a new game is started):
+  if (!physicalConformity)
+  {
+    byte piecesPhys, piecesMem;
+    char debugMessage[80] = "";
+    rows = 0;
+
+    for (int row = 0; row < 8; row++)
+    {
+      piecesMem = 0;
+      for (int i = 0; i < 8; i++)
+      {
+        piecesMem <<= 1;
+        if (chessBoard.piece[toBoardIndex(row, i)] != 0)
+        {
+          piecesMem++;
+        }
+      }
+
+      piecesPhys = readRawRow[row];
+
+      sprintf(debugMessage, "piecesPhysical: %x", piecesPhys);
+      debugPrintln(debugMessage);
+      sprintf(debugMessage, "piecesMemory: %x", piecesMem);
+      debugPrintln(debugMessage);
+
+      if (piecesMem != piecesPhys)
+      {
+        physicalConformity = 0;
+        rows++;
+        lv_label_set_text_fmt(debugLbl, "Check pieces!");
+        led_buffer[7-row] = piecesMem>piecesPhys?piecesMem-piecesPhys:piecesPhys-piecesMem;
+
+        // mephisto.writeRow(row, piecesMem>piecesPhys?piecesMem-piecesPhys:piecesPhys-piecesMem);
+        // delay(LED_TIME);
+      }
+    }
+    if(rows==0)
+    {
+      physicalConformity = 1;
+      lv_label_set_text_fmt(debugLbl, "");
+    }
+    for (int i = 0; i < 8; i++)
+    {
+      mephisto.writeRow(7 - i, led_buffer[i]);
+      if (led_buffer[i] != 0)
+      delay(LED_TIME / rows);
+    }
+    return;
+  }
+
   // First step: Display LEDs with the content from the buffer.
   // 1st calculate buffer time:
   rows = 0;
@@ -1826,11 +1887,6 @@ void loop()
       delay(LED_TIME / rows);
   }
 
-  // Read row status from board:
-  for(int i=0; i<8; i++) {
-    readRawRow[i] = mephisto.readRow(i);
-  }
-  
   setBack = 0;
   lifted = 0;
 

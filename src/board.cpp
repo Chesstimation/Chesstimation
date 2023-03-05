@@ -176,6 +176,10 @@ void Board::printDebugMessage(void) {
     
 }
 
+/// @brief 
+/// @param piece: representation of piece in internal notation
+/// @return FEN code for piece
+
 char Board::FENpieceFromType(byte piece) {
     char fen;
     switch(piece & 0b00001110)
