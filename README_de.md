@@ -47,10 +47,11 @@ Falls euch das Projekt gefällt, könnt ihr mich gerne kontaktieren über chesst
 ## Folgenden Hardware-Komponenten werden benötigt:
 1. Wemos LolinD32 (https://de.aliexpress.com/item/32808551116.html)
 2. 40-poliger Platinenrandstecker, z.B. https://de.aliexpress.com/item/33035971298.html (ihr müsst 2x20 Pin auswählen)
-3. Farbiges Flachbandkabel (~20cm) mit 1.27mm Litzenabstand, z.B. von Aliexpress: https://de.aliexpress.com/item/1005003002882947.html (1.27mm spacing auswählen!)
+3. Farbiges Flachbandkabel (~20cm) mit 1.27mm Litzenabstand, 40-polig, z.B. von Aliexpress: https://www.aliexpress.com/item/1005002509747445.html (1.27mm spacing auswählen!)
 4. Waveshare 3.5 inch TFT Pico Res Touch display: https://www.waveshare.com/pico-restouch-lcd-3.5.htm, z.B. hier: https://eckstein-shop.de/WaveShare35inchTouchDisplayModuleforRaspberryPiPico2C65KColors2C480C3973202CSPI
 5. Micro USB Stecker zum Löten (https://www.ebay.de/itm/333700073578) und USB-C Buchse zum Löten (z.B. https://www.ebay.de/itm/233717443011) 
-6. Akku mit PH2 Stecker für Lolin D32, z.B.: https://www.ebay.de/itm/324239268082?hash=item4b7e2a98f2:g:IXQAAOSwRJVhug4l (ihr braucht einen extra JST PH 2.0mm Stecker, auf richtige Polung achten! Die Polung auf dem Lolin scheint nicht zu den verfügbaren Akkus zu passen, also Plus- und Minusanschluss müssen getauscht werden!)
+6. Akku mit PH2 Stecker für Lolin D32, z.B.: https://www.aliexpress.com/item/1005001310592871.html (ihr braucht einen extra JST PH 2.0mm Stecker (z.B. https://www.aliexpress.com/item/1005001315857869.html), auf richtige Polung achten! Die Polung auf dem Lolin scheint nicht zu den verfügbaren Akkus zu passen, also Plus- und Minusanschluss müssen getauscht werden!)
+7. Mikro-Schiebeschalter (Einbau auf der Unterseite des Moduls) zum Komplettabschalten des Moduls (https://www.aliexpress.com/item/4001202080623.html Typ MSS-22D18 wählen!) 
 
 ## Benötigte Werkzeuge und Fähigkeiten:
 * entsprechendes Werkzeug zum Löten: Lötkolben, Abisolierzange, Seitenschneider, etc.
@@ -73,7 +74,7 @@ Ich habe dies in unten stehender Tabelle so berücksichtigt, dass man sowohl die
   </tr>
   <tr>
     <td>1+2</td>
-    <td>3V</td>
+    <td>BAT</td>
   </tr>
   <tr>
     <td>39+40</td>
