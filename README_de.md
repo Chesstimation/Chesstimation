@@ -3,7 +3,7 @@
 # Chesstimation
 
 In diesem Projekt wird ein neues Modul für alte Mephisto Schachbretter der Modular, Exclusive und München-Serie entwickelt.
-Mein Ziel war es, hier nur die aktuellsten Technologien wie Touch-Display, Akkubetrieb, drahtlose Kommunikation und USB-C zu verwenden.
+Mein Ziel war es, hier nur die aktuellsten Technologien wie Touch-Display, Akkubetrieb, drahtlose Kommunikation über Bluetooth und USB-C zu verwenden.
 Mein Hauptziel war kein neuer Schachcomputer sondern hauptsächlich eine Schnittstelle zu schaffen, um diese alten Bretter mit einem Computer oder einem Smartphone verbinden zu können. Darüber kann man dann sowohl online als auch gegen eine fast unendliche Anzahl verschiedener Schachengines spielen.
 Für das Modul werden nur wenige Standard-Hardwarekomponenten benötigt.
 
@@ -49,7 +49,7 @@ Falls euch das Projekt gefällt, könnt ihr mich gerne kontaktieren über chesst
 2. 40-poliger Platinenrandstecker, z.B. https://de.aliexpress.com/item/33035971298.html (ihr müsst 2x20 Pin auswählen)
 3. Farbiges Flachbandkabel (~20cm) mit 1.27mm Litzenabstand, 40-polig, z.B. von Aliexpress: https://www.aliexpress.com/item/1005002509747445.html (1.27mm spacing auswählen!)
 4. Waveshare 3.5 inch TFT Pico Res Touch display: https://www.waveshare.com/pico-restouch-lcd-3.5.htm, z.B. hier: https://eckstein-shop.de/WaveShare35inchTouchDisplayModuleforRaspberryPiPico2C65KColors2C480C3973202CSPI
-5. Micro USB Stecker zum Löten (https://www.ebay.de/itm/333700073578) und USB-C Buchse zum Löten (z.B. https://www.ebay.de/itm/233717443011) 
+5. Micro USB Stecker zum Löten (https://www.aliexpress.com/item/33060931097.html) und USB-C Buchse zum Löten (z.B. https://www.aliexpress.com/item/1005002292881776.html) 
 6. Akku mit PH2 Stecker für Lolin D32, z.B.: https://www.aliexpress.com/item/1005001310592871.html (ihr braucht einen extra JST PH 2.0mm Stecker (z.B. https://www.aliexpress.com/item/1005001315857869.html), auf richtige Polung achten! Die Polung auf dem Lolin scheint nicht zu den verfügbaren Akkus zu passen, also Plus- und Minusanschluss müssen getauscht werden!)
 7. Mikro-Schiebeschalter (Einbau auf der Unterseite des Moduls) zum Komplettabschalten des Moduls (https://www.aliexpress.com/item/4001202080623.html Typ MSS-22D18 wählen!) 
 
@@ -185,12 +185,12 @@ Ich habe dies in unten stehender Tabelle so berücksichtigt, dass man sowohl die
 
 ## Softwareentwicklungsumgebung
 
-Software development is done in C++ using:
+Die Software wurde in C/C++ entwickelt, unter Benutzung folgender Tools:
 * Visual Studio Code
 * Platform IO
 
-In Platform IO you need to install 2 additional libraries for this project:
-* LVGL 8.3.2 (you need to use Chesstimation's lv_conf.h)
-* TFT eSPI 2.4.35 (you need to use chess-module-display.h as User_Setup.h)
+In Platform IO braucht man zwei zusätzliche Bibliotheken:
+* LVGL 8.3.4 (you need to use Chesstimation's lv_conf.h)
+* TFT eSPI 2.5.2 (you need to use Chesstimation's as User_Setup.h and User_Setup_Select.h)
 
 For flashing the firmware to the Lolin D32 without Platform IO I use ESP Flasher: https://github.com/Jason2866/ESP_Flasher/releases

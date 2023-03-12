@@ -45,7 +45,7 @@ I would also be happy to receive a donation.
 2. 40-pin edge card connector, e.g. https://de.aliexpress.com/item/33035971298.html (you need to select 2x20 Pin)
 3. Rainbow Ribbon Cable (~30cm) with 1.27mm spacing, e.g. from Aliexpress: https://www.aliexpress.com/item/1005002509747445.html (you need to select 1.27mm spacing and 40 pin!)
 4. Waveshare 3.5 inch TFT Pico Res Touch display: https://www.waveshare.com/pico-restouch-lcd-3.5.htm, e.g available here: https://eckstein-shop.de/WaveShare35inchTouchDisplayModuleforRaspberryPiPico2C65KColors2C480C3973202CSPI
-5. Micro USB soldering plug (https://www.ebay.de/itm/333700073578) and USB-C female soldering connector (e.g. https://www.ebay.de/itm/233717443011) 
+5. Micro USB soldering plug (https://www.aliexpress.com/item/33060931097.html) and USB-C female soldering connector (e.g. https://www.aliexpress.com/item/1005002292881776.html) 
 6. optionally lipo battery with plug for Lolin D32, e.g.: https://www.aliexpress.com/item/1005001310592871.html (you need an extra JST PH 2.0mm plug for this battery, e.g. https://www.aliexpress.com/item/1005001315857869.html Double-check polarity of plug with + and - signs on PCB of Lolin!) 
 7. Micro-Switch (built into bottom of module) to switch off module completely (https://www.aliexpress.com/item/4001202080623.html Choose MSS-22D18 type!) 
 
@@ -178,7 +178,7 @@ Software development is done in C++ using:
 * Platform IO
 
 In Platform IO you need to install 2 additional libraries for this project:
-* LVGL 8.3.2 (you need to use Chesstimation's lv_conf.h)
-* TFT eSPI 2.4.35 (you need to use chess-module-display.h as User_Setup.h)
+* LVGL 8.3.4 (you need to use Chesstimation's lv_conf.h)
+* TFT eSPI 2.5.2 (you need to use Chesstimation's as User_Setup.h and User_Setup_Select.h)
 
 For flashing the firmware to the Lolin D32 without Platform IO I use ESP Flasher: https://github.com/Jason2866/ESP_Flasher/releases
