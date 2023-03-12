@@ -139,7 +139,7 @@ Ich habe dies in unten stehender Tabelle so berücksichtigt, dass man sowohl die
   </tr>
   <tr>
     <td>VSYS</td>
-    <td>3V</td>
+    <td>BAT</td>
   </tr>
   <tr>
     <td>GND</td>

@@ -127,7 +127,7 @@ This has already been considered in below table and you will be able to connect 
   </tr>
   <tr>
     <td>VSYS</td>
-    <td>3V</td>
+    <td>BAT</td>
   </tr>
   <tr>
     <td>GND</td>
