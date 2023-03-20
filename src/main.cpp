@@ -1,5 +1,5 @@
 /*  
-    Copyright 2021, 2022 Andreas Petersik (andreas.petersik@gmail.com)
+    Copyright 2021, 2022, 2023 Andreas Petersik (andreas.petersik@gmail.com)
     
     This file is part of the Chesstimation Project.
 
@@ -17,8 +17,8 @@
     along with Chesstimation.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Chesstimation 1.4"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Jan 15th, 2023"
+#define VERSION     "Chesstimation 1.4.1"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Mar 19th, 2023"
 // #define BOARD_TEST
 
 #include <Arduino.h>
@@ -1080,7 +1080,7 @@ static void event_handler(lv_event_t *e)
       resetOldBoard();
       updatePiecesOnBoard();
 
-      physicalConformity = 0;
+      physicalConformity = (lv_obj_get_state(certaboCalibCB) & LV_STATE_CHECKED); // Physical conformity not checked when using calibration Queens in Certabo Emulation!
 
       lv_scr_load(screenMain);
     }
@@ -1794,7 +1794,7 @@ void loop()
     }
   }
 
-  if(chessBoard.emulation==1)
+  if(chessBoard.emulation==1) // Millennium Chesslink
   {
     // Translate MephistoLEDs into led_buffer:
 
@@ -1855,16 +1855,20 @@ void loop()
         // delay(LED_TIME);
       }
     }
-    if(rows==0)
+    if (rows == 0)
     {
       physicalConformity = 1;
       lv_label_set_text_fmt(debugLbl, "");
+      led_buffer[0] = led_buffer[1] = led_buffer[2] = led_buffer[3] = led_buffer[4] = led_buffer[5] = led_buffer[6] = led_buffer[7] = 0; 
     }
     for (int i = 0; i < 8; i++)
     {
       mephisto.writeRow(7 - i, led_buffer[i]);
-      if (led_buffer[i] != 0)
-      delay(LED_TIME / rows);
+      if (led_buffer[i] != 0 && rows != 0)
+      {
+        delay(LED_TIME / rows);
+        lv_task_handler();
+      }
     }
     return;
   }
