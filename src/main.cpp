@@ -17,8 +17,8 @@
     along with Chesstimation.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Chesstimation 1.4.1"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Mar 19th, 2023"
+#define VERSION     "Chesstimation 1.4.2"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Nov 26th, 2023"
 // #define BOARD_TEST
 
 #include <Arduino.h>
@@ -37,6 +37,7 @@
 
 // my includes:
 
+#include <language_de.h>
 #include <mephisto.h>
 #include <board.h>
 
@@ -99,6 +100,7 @@ lv_style_t fExtraLargeStyle;
 lv_style_t light_square;
 lv_style_t dark_square;
 
+LV_FONT_DECLARE(montserrat_umlaute20);
 LV_IMG_DECLARE(WP40);
 LV_IMG_DECLARE(BP40);
 LV_IMG_DECLARE(WK40);
@@ -703,6 +705,7 @@ void initSerialPortCommunication(void)
     {
       // Serial.end();
       Serial.begin(38400, SERIAL_7O1);
+      // Serial.begin(38400); // ESP32 S3, SERIAL_7O1);
     }
     if(connection == BT)
     {
@@ -714,13 +717,15 @@ void initSerialPortCommunication(void)
       initBleServiceChesslink();
     }
   }
+  /*
   // DGT Pegasus:
   if (chessBoard.emulation == 2)
   {
     if (connection == USB)
     {
       // Serial.end();
-      Serial.begin(38400, SERIAL_7O1);
+      // Serial.begin(38400, SERIAL_7O1);
+      Serial.begin(38400); // ESP32 S3, SERIAL_7O1);
     }
     if(connection == BT)
     {
@@ -732,6 +737,7 @@ void initSerialPortCommunication(void)
       initBleServicePegasus();
     }
   }
+  */
   // Update UI:
   if(connection == USB) 
   {
@@ -1241,7 +1247,7 @@ void createSettingsScreen()
   lv_obj_t *label;
 
   object = lv_label_create(cont_header);
-  lv_label_set_text(object, "Settings");
+  lv_label_set_text(object, UI_SETTINGS);
   lv_obj_center(object);
   lv_obj_add_style(object, &fExtraLargeStyle, 0);   // was f28Style
 
@@ -1263,7 +1269,7 @@ void createSettingsScreen()
 
   /*Create a container for Certabo Settings */
   object = lv_obj_create(content);
-  lv_obj_set_size(object, 260, 30);
+  lv_obj_set_size(object, 275, 30);   // Size of the left column in the Settings Dialog
   lv_obj_set_style_radius(object, 0, 0);
   lv_obj_set_style_border_width(object, 0, 0);
   lv_obj_set_flex_flow(object, LV_FLEX_FLOW_ROW);
@@ -1278,12 +1284,12 @@ void createSettingsScreen()
   lv_obj_add_style(certaboCB, &fMediumStyle, 0);
 
   certaboCalibCB = lv_checkbox_create(object);
-  lv_checkbox_set_text(certaboCalibCB, "w Queens");
+  lv_checkbox_set_text(certaboCalibCB, UI_W_QUEENS);
   lv_obj_add_event_cb(certaboCalibCB, event_handler, LV_EVENT_ALL, NULL);
   lv_obj_add_style(certaboCalibCB, &fMediumStyle, 0);
 
   flippedCB = lv_checkbox_create(content);
-  lv_checkbox_set_text(flippedCB, "Flip Board");
+  lv_checkbox_set_text(flippedCB, UI_FLIP_BOARD);
   lv_obj_add_event_cb(flippedCB, event_handler, LV_EVENT_ALL, NULL);
 
 #ifndef PEGASUS
@@ -1292,7 +1298,7 @@ void createSettingsScreen()
   lv_obj_add_style(flippedCB, &fMediumStyle, 0);
 
   object = lv_label_create(content);
-  lv_label_set_text(object, "Connection:");
+  lv_label_set_text(object, UI_CONNECTION);
 #ifndef PEGASUS
   lv_obj_set_style_pad_top(object, 12, 0);
 #endif
@@ -1329,22 +1335,22 @@ void createSettingsScreen()
   offBtn = lv_btn_create(content);
   label = lv_label_create(offBtn);
   lv_obj_add_event_cb(offBtn, event_handler, LV_EVENT_ALL, NULL);
-  lv_label_set_text(label, "Switch Off");
-  lv_obj_set_size(offBtn, 180, 35);
+  lv_label_set_text(label, UI_SWITCH_OFF);
+  lv_obj_set_size(offBtn, 160, 35);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
   restartBtn = lv_btn_create(content);
   label = lv_label_create(restartBtn);
-  lv_label_set_text(label, "New Game");
+  lv_label_set_text(label, UI_NEW_GAME);
   lv_obj_add_event_cb(restartBtn, event_handler, LV_EVENT_ALL, NULL);
-  lv_obj_set_size(restartBtn, 180, 35);
+  lv_obj_set_size(restartBtn, 160, 35);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
   /*Create a container for Brightness Slider */
   object = lv_obj_create(content);
-  lv_obj_set_size(object, 180, 55);
+  lv_obj_set_size(object, 160, 55);
   lv_obj_set_style_radius(object, 0, 0);
   lv_obj_set_style_border_width(object, 0, 0);
   lv_obj_set_flex_flow(object, LV_FLEX_FLOW_COLUMN);
@@ -1358,10 +1364,10 @@ void createSettingsScreen()
   label = lv_label_create(object);
   // lv_obj_set_size(label, 160, 10);
   // lv_obj_center(label);
-  lv_label_set_text(label, "Brightness:");
+  lv_label_set_text(label, UI_BRIGHTNESS);
 
   lv_obj_t *brightnessSlider = lv_slider_create(object);
-  lv_obj_set_size(brightnessSlider, 160, 10);
+  lv_obj_set_size(brightnessSlider, 140, 10);
   // lv_obj_set_style_pad_left(brightnessSlider, 5, 0);
 
 #ifdef PicoResTouchLCD_35
@@ -1389,8 +1395,8 @@ void createSettingsScreen()
   exitSettingsBtn = lv_btn_create(content);
   label = lv_label_create(exitSettingsBtn);
   lv_obj_add_event_cb(exitSettingsBtn, event_handler, LV_EVENT_ALL, NULL);
-  lv_label_set_text(label, "Back");
-  lv_obj_set_size(exitSettingsBtn, 180, 35);
+  lv_label_set_text(label, UI_BACK);
+  lv_obj_set_size(exitSettingsBtn, 160, 35);
   lv_obj_center(label);
   lv_obj_add_style(label, &fMediumStyle, 0);
 
@@ -1404,7 +1410,10 @@ void createUI()
   // lv_style_set_text_font(&fSmallStyle, &lv_font_montserrat_10);
     
   lv_style_init(&fMediumStyle);
-  lv_style_set_text_font(&fMediumStyle, &lv_font_montserrat_20);
+  // lv_font_t mediumStyleFont = lv_font_montserrat_20;
+  // mediumStyleFont.fallback = &umlaute20;
+  // lv_style_set_text_font(&fMediumStyle, &mediumStyleFont);
+  lv_style_set_text_font(&fMediumStyle, &montserrat_umlaute20);
     
   lv_style_init(&fLargeStyle);
   lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);  // was 22
@@ -1429,7 +1438,7 @@ void createUI()
   #endif
   
   liftedPiecesStringLbl = lv_label_create(screenMain);
-  lv_label_set_text(liftedPiecesStringLbl, "ready");
+  lv_label_set_text(liftedPiecesStringLbl, UI_READY);
   lv_obj_set_style_text_align(liftedPiecesStringLbl, LV_TEXT_ALIGN_LEFT, 0);
   lv_obj_set_size(liftedPiecesStringLbl, 135, 160);
   lv_obj_set_pos(liftedPiecesStringLbl, 330, 100);
@@ -1438,8 +1447,8 @@ void createUI()
   debugLbl = lv_label_create(screenMain);
   lv_label_set_text(debugLbl, "");
   lv_obj_set_style_text_align(debugLbl, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_obj_set_size(debugLbl, 144, 40);
-  lv_obj_set_pos(debugLbl, 325, 230);
+  lv_obj_set_size(debugLbl, 151, 25);
+  lv_obj_set_pos(debugLbl, 322, 230);
   lv_obj_add_style(debugLbl, &fMediumStyle, 0);  
 
 #ifdef LEGACY_EMULATION  
@@ -1456,11 +1465,11 @@ void createUI()
 
   settingsBtn = lv_btn_create(screenMain);
   lv_obj_add_event_cb(settingsBtn, event_handler, LV_EVENT_ALL, NULL);
-  lv_obj_set_size(settingsBtn, 120, 40);
-  lv_obj_set_pos(settingsBtn, 340, 260);
+  lv_obj_set_size(settingsBtn, 150, 40);
+  lv_obj_set_pos(settingsBtn, 325, 260);
 
   lv_obj_t * label1 = lv_label_create(settingsBtn);
-  lv_label_set_text(label1, "Settings");
+  lv_label_set_text(label1, UI_SETTINGS);
   lv_obj_set_align(label1, LV_ALIGN_CENTER);
   lv_obj_add_style(settingsBtn, &fMediumStyle, 0);
 
@@ -1848,7 +1857,7 @@ void loop()
       {
         physicalConformity = 0;
         rows++;
-        lv_label_set_text_fmt(debugLbl, "Check pieces!");
+        lv_label_set_text_fmt(debugLbl, UI_CHECK_PIECES);
         led_buffer[7-row] = piecesMem>piecesPhys?piecesMem-piecesPhys:piecesPhys-piecesMem;
 
         // mephisto.writeRow(row, piecesMem>piecesPhys?piecesMem-piecesPhys:piecesPhys-piecesMem);
@@ -1945,7 +1954,7 @@ void loop()
   //   chessBoard.boardMessage[65]=0;
   // }
 
-  if (lifted > 0 || setBack > 0 || chessBoard.emulation == 0 )//|| ((actMillis-oldMessageMillis>62) && millBLEinitialized)) // Certabo boards sends position even when no change happend
+  if (lifted > 0 || setBack > 0 || chessBoard.emulation == 0 || ((actMillis-oldMessageMillis>eeprom[3]*4) && eeprom[2]==2)) // Certabo boards sends position even when no change happend
   { 
     sendMessageToChessBoard(chessBoard.boardMessage);
     oldMessageMillis = actMillis;

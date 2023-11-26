@@ -6,3 +6,7 @@
 .vscode/extensions.json
 src/lvgl_touchscreen_cal.c
 include/lvgl_touchscreen_cal.h
+include/lvgl/lv_conf837.h
+locales/en.json
+.vscode/settings.json
+package.json
