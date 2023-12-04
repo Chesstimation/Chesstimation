@@ -17,8 +17,8 @@
     along with Chesstimation.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Chesstimation 1.4.2"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Nov 26th, 2023"
+#define VERSION     "Chesstimation 1.4.4"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 2nd, 2023"
 // #define BOARD_TEST
 
 #include <Arduino.h>
@@ -27,6 +27,7 @@
 #include <driver/rtc_io.h>
 #include <driver/adc.h>
 #include <BluetoothSerial.h>
+#include "lv_i18n.h"
 
 #include <BLEDevice.h>
 #include <BLE2902.h>
@@ -37,7 +38,6 @@
 
 // my includes:
 
-#include <language_de.h>
 #include <mephisto.h>
 #include <board.h>
 
@@ -65,6 +65,7 @@ int millBLEinitialized = 0;
 int physicalConformity = 0;
 
 enum connectionType {USB, BT, BLE} connection;
+enum languageType {DE, EN, ES} language;
 
 byte readRawRow[8];
 byte led_buffer[8];
@@ -101,6 +102,7 @@ lv_style_t light_square;
 lv_style_t dark_square;
 
 LV_FONT_DECLARE(montserrat_umlaute20);
+LV_FONT_DECLARE(montserrat_umlaute22);
 LV_IMG_DECLARE(WP40);
 LV_IMG_DECLARE(BP40);
 LV_IMG_DECLARE(WK40);
@@ -119,7 +121,8 @@ lv_indev_drv_t indev_drv;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *usbCB, *btCB, *bleCB, *flippedCB, *pegasusCB, *testCB;
-lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider, *connectionLbl, *emulatorsBtn;
+lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider, *connectionLbl, *emulatorsBtn, *langBtn, *langLbl;
+lv_obj_t *ui_settings_obj, *ui_connection_obj, *offBtnLbl, *newGameLbl, *brightLbl, *backLbl, *settingsLbl, *emulationLbl, *langDd;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void displayLEDstartUpSequence()
@@ -240,6 +243,7 @@ void saveBoardSettings(void)
     f.write(chessBoard.flipped);
     f.write(saveConnection);
     f.write(brightness);
+    f.write(language);
     f.close();
   }
 }
@@ -304,6 +308,10 @@ void loadBoardSettings(void)
         {
           brightness = tempInt8[0];
         }
+      }
+      if (f.readBytes((char *)tempInt8, 1) == 1)
+      {
+        language = (languageType)tempInt8[0];
       }
       f.close();
     }
@@ -1038,6 +1046,35 @@ void switchOff(void)
 
 }
 
+void updateUI_language()
+{
+  if(language == ES) {
+    lv_i18n_set_locale("ES");
+    // lv_label_set_text(langLbl, "ES");
+  } else if(language == DE) {
+    lv_i18n_set_locale("DE");
+    // lv_label_set_text(langLbl, "ES");
+  } else {
+    lv_i18n_set_locale("EN");
+    // lv_label_set_text(langLbl, "EN");
+  }
+
+  lv_label_set_text(liftedPiecesStringLbl, lv_i18n_get_text("UI_READY"));
+
+  lv_label_set_text(settingsLbl, lv_i18n_get_text("UI_SETTINGS"));
+  lv_label_set_text(ui_settings_obj, lv_i18n_get_text("UI_SETTINGS"));
+  lv_label_set_text(emulationLbl, lv_i18n_get_text("UI_EMULATION"));
+  lv_checkbox_set_text(certaboCalibCB, lv_i18n_get_text("UI_W_QUEENS"));
+  lv_checkbox_set_text(flippedCB, lv_i18n_get_text("UI_FLIP_BOARD"));
+
+  lv_label_set_text(ui_connection_obj, lv_i18n_get_text("UI_CONNECTION"));
+  lv_label_set_text(offBtnLbl, lv_i18n_get_text("UI_SWITCH_OFF"));
+  lv_label_set_text(newGameLbl, lv_i18n_get_text("UI_NEW_GAME"));
+  lv_label_set_text(brightLbl, lv_i18n_get_text("UI_BRIGHTNESS"));
+  lv_label_set_text(backLbl, lv_i18n_get_text("UI_BACK"));
+
+}
+
 static void event_handler(lv_event_t *e)
 {
   lv_event_code_t code = lv_event_get_code(e);
@@ -1052,10 +1089,10 @@ static void event_handler(lv_event_t *e)
     {
       if (obj == square[i])
       {
-        clickedBoard ++;
+        clickedBoard++;
       }
     }
-    if(clickedBoard>0) 
+    if (clickedBoard > 0)
     {
       displayAboutBox();
     }
@@ -1063,7 +1100,7 @@ static void event_handler(lv_event_t *e)
     {
       startTouchCalibration();
     }
-    
+
     if (obj == offBtn)
     {
       switchOff();
@@ -1071,6 +1108,9 @@ static void event_handler(lv_event_t *e)
     if (obj == settingsBtn)
     {
       lv_scr_load(settingsScreen);
+      // if(language==DE) lv_dropdown_set_selected(langDd, 2);
+      // else if(language==ES) lv_dropdown_set_selected(langDd, 1);
+
     }
     /*
     if (obj == emulatorsBtn)
@@ -1097,6 +1137,30 @@ static void event_handler(lv_event_t *e)
   }
   if (code == LV_EVENT_VALUE_CHANGED)
   {
+    if (obj == langDd)
+    {
+      char buf[3];
+      lv_dropdown_get_selected_str(obj, buf, sizeof(buf));
+      debugPrintln(buf);
+      if (strcmp("DE", buf) == 0)
+      {
+        language = DE;
+        debugPrintln("Selected Language DE");
+        updateUI_language();
+      }
+      else if (strcmp("ES", buf) == 0)
+      {
+        language = ES;
+        debugPrintln("Selected Language ES");
+        updateUI_language();
+      }
+      else
+      {
+        language = EN;
+        debugPrintln("Selected Language EN");
+        updateUI_language();
+      }
+    }
     if (obj == usbCB)
     {
       lv_obj_add_state(usbCB, LV_STATE_CHECKED);
@@ -1246,14 +1310,12 @@ void createSettingsScreen()
 
   lv_obj_t *label;
 
-  object = lv_label_create(cont_header);
-  lv_label_set_text(object, UI_SETTINGS);
-  lv_obj_center(object);
-  lv_obj_add_style(object, &fExtraLargeStyle, 0);   // was f28Style
+  ui_settings_obj = lv_label_create(cont_header);
+  lv_obj_center(ui_settings_obj);
+  lv_obj_add_style(ui_settings_obj, &fExtraLargeStyle, 0);   // was f28Style
 
-  object = lv_label_create(content);
-  lv_label_set_text(object, "Emulation:");
-  lv_obj_add_style(object, &fLargeStyle, 0);   // was f28Style
+  emulationLbl = lv_label_create(content);
+  lv_obj_add_style(emulationLbl, &fLargeStyle, 0);   // was f28Style
 
   chesslinkCB = lv_checkbox_create(content);
   lv_checkbox_set_text(chesslinkCB, "Millennium/Chesslink");
@@ -1284,25 +1346,46 @@ void createSettingsScreen()
   lv_obj_add_style(certaboCB, &fMediumStyle, 0);
 
   certaboCalibCB = lv_checkbox_create(object);
-  lv_checkbox_set_text(certaboCalibCB, UI_W_QUEENS);
   lv_obj_add_event_cb(certaboCalibCB, event_handler, LV_EVENT_ALL, NULL);
   lv_obj_add_style(certaboCalibCB, &fMediumStyle, 0);
 
-  flippedCB = lv_checkbox_create(content);
-  lv_checkbox_set_text(flippedCB, UI_FLIP_BOARD);
+  /*Create a container for Flip Board and Language */
+  static lv_coord_t col_dsc[] = {210, 50, LV_GRID_TEMPLATE_LAST};
+  static lv_coord_t row_dsc[] = {45, LV_GRID_TEMPLATE_LAST};
+  object = lv_obj_create(content);
+  lv_obj_set_grid_dsc_array(object, col_dsc, row_dsc);
+  lv_obj_set_size(object, 275, 45); 
+  lv_obj_set_style_radius(object, 0, 0);
+  lv_obj_set_style_border_width(object, 0, 0);
+  lv_obj_set_style_pad_left(object, 0, 0);
+  lv_obj_set_style_pad_top(object, 0, 0);
+  lv_obj_clear_flag(object, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_center(object);
+
+  flippedCB = lv_checkbox_create(object);
   lv_obj_add_event_cb(flippedCB, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_set_grid_cell(flippedCB, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_CENTER, 0, 1);
+
+  langDd = lv_dropdown_create(object);
+  lv_dropdown_set_options_static(langDd, "EN\nES\nDE");
+  if(language==DE) lv_dropdown_set_selected(langDd, 2);
+  else if(language==ES) lv_dropdown_set_selected(langDd, 1);
+
+  lv_obj_add_event_cb(langDd, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_set_size(langDd, 68, 40);
+  // lv_obj_add_style(langDd, &fMediumStyle, 0);
+  lv_obj_set_grid_cell(langDd, LV_GRID_ALIGN_END, 1, 1, LV_GRID_ALIGN_CENTER, 0, 1);
 
 #ifndef PEGASUS
   lv_obj_set_style_pad_top(flippedCB, 16, 0);
 #endif
   lv_obj_add_style(flippedCB, &fMediumStyle, 0);
 
-  object = lv_label_create(content);
-  lv_label_set_text(object, UI_CONNECTION);
+  ui_connection_obj = lv_label_create(content);
 #ifndef PEGASUS
-  lv_obj_set_style_pad_top(object, 12, 0);
+  lv_obj_set_style_pad_top(ui_connection_obj, 12, 0);
 #endif
-  lv_obj_add_style(object, &fLargeStyle, 0);
+  lv_obj_add_style(ui_connection_obj, &fLargeStyle, 0);
 
   /*Create a container for Connection Settings */
   object = lv_obj_create(content);
@@ -1333,20 +1416,18 @@ void createSettingsScreen()
   updateSettingsScreen();
 
   offBtn = lv_btn_create(content);
-  label = lv_label_create(offBtn);
+  offBtnLbl = lv_label_create(offBtn);
   lv_obj_add_event_cb(offBtn, event_handler, LV_EVENT_ALL, NULL);
-  lv_label_set_text(label, UI_SWITCH_OFF);
   lv_obj_set_size(offBtn, 160, 35);
-  lv_obj_center(label);
-  lv_obj_add_style(label, &fMediumStyle, 0);
+  lv_obj_center(offBtnLbl);
+  lv_obj_add_style(offBtnLbl, &fMediumStyle, 0);
 
   restartBtn = lv_btn_create(content);
-  label = lv_label_create(restartBtn);
-  lv_label_set_text(label, UI_NEW_GAME);
+  newGameLbl = lv_label_create(restartBtn);
   lv_obj_add_event_cb(restartBtn, event_handler, LV_EVENT_ALL, NULL);
   lv_obj_set_size(restartBtn, 160, 35);
-  lv_obj_center(label);
-  lv_obj_add_style(label, &fMediumStyle, 0);
+  lv_obj_center(newGameLbl);
+  lv_obj_add_style(newGameLbl, &fMediumStyle, 0);
 
   /*Create a container for Brightness Slider */
   object = lv_obj_create(content);
@@ -1361,10 +1442,10 @@ void createSettingsScreen()
   lv_obj_align_to(object, content, LV_ALIGN_TOP_MID, 0, 0);
   lv_obj_clear_flag(object, LV_OBJ_FLAG_SCROLLABLE);
 
-  label = lv_label_create(object);
-  // lv_obj_set_size(label, 160, 10);
-  // lv_obj_center(label);
-  lv_label_set_text(label, UI_BRIGHTNESS);
+  brightLbl = lv_label_create(object);
+  lv_obj_add_style(brightLbl, &fMediumStyle, 0);
+  // lv_obj_set_size(brightLbl, 160, 10);
+  // lv_obj_center(brightLbl);
 
   lv_obj_t *brightnessSlider = lv_slider_create(object);
   lv_obj_set_size(brightnessSlider, 140, 10);
@@ -1393,12 +1474,11 @@ void createSettingsScreen()
   // lv_obj_add_style(label, &fMediumStyle, 0);
 
   exitSettingsBtn = lv_btn_create(content);
-  label = lv_label_create(exitSettingsBtn);
+  backLbl = lv_label_create(exitSettingsBtn);
   lv_obj_add_event_cb(exitSettingsBtn, event_handler, LV_EVENT_ALL, NULL);
-  lv_label_set_text(label, UI_BACK);
   lv_obj_set_size(exitSettingsBtn, 160, 35);
-  lv_obj_center(label);
-  lv_obj_add_style(label, &fMediumStyle, 0);
+  lv_obj_center(backLbl);
+  lv_obj_add_style(backLbl, &fMediumStyle, 0);
 
 }
 
@@ -1416,7 +1496,8 @@ void createUI()
   lv_style_set_text_font(&fMediumStyle, &montserrat_umlaute20);
     
   lv_style_init(&fLargeStyle);
-  lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);  // was 22
+  // lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);  // was 22
+  lv_style_set_text_font(&fLargeStyle, &montserrat_umlaute22);  // was 22
     
   lv_style_init(&fExtraLargeStyle);
   lv_style_set_text_font(&fExtraLargeStyle, &lv_font_montserrat_28); // was 28
@@ -1438,7 +1519,7 @@ void createUI()
   #endif
   
   liftedPiecesStringLbl = lv_label_create(screenMain);
-  lv_label_set_text(liftedPiecesStringLbl, UI_READY);
+  // lv_label_set_text(liftedPiecesStringLbl, lv_i18n_get_text("UI_READY"));
   lv_obj_set_style_text_align(liftedPiecesStringLbl, LV_TEXT_ALIGN_LEFT, 0);
   lv_obj_set_size(liftedPiecesStringLbl, 135, 160);
   lv_obj_set_pos(liftedPiecesStringLbl, 330, 100);
@@ -1468,9 +1549,8 @@ void createUI()
   lv_obj_set_size(settingsBtn, 150, 40);
   lv_obj_set_pos(settingsBtn, 325, 260);
 
-  lv_obj_t * label1 = lv_label_create(settingsBtn);
-  lv_label_set_text(label1, UI_SETTINGS);
-  lv_obj_set_align(label1, LV_ALIGN_CENTER);
+  settingsLbl = lv_label_create(settingsBtn);
+  lv_obj_set_align(settingsLbl, LV_ALIGN_CENTER);
   lv_obj_add_style(settingsBtn, &fMediumStyle, 0);
 
   // // labelA1 = lv_label_create(screenMain);
@@ -1655,9 +1735,13 @@ void setup()
 
   initLVGL();
 
+  lv_i18n_init(lv_i18n_language_pack);
+
   createUI();
 
   createSettingsScreen();
+
+  updateUI_language();
 
   initSerialPortCommunication();
 
@@ -1857,7 +1941,7 @@ void loop()
       {
         physicalConformity = 0;
         rows++;
-        lv_label_set_text_fmt(debugLbl, UI_CHECK_PIECES);
+        lv_label_set_text_fmt(debugLbl, lv_i18n_get_text("UI_CHECK_PIECES"));
         led_buffer[7-row] = piecesMem>piecesPhys?piecesMem-piecesPhys:piecesPhys-piecesMem;
 
         // mephisto.writeRow(row, piecesMem>piecesPhys?piecesMem-piecesPhys:piecesPhys-piecesMem);

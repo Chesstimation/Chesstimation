@@ -10,3 +10,5 @@ include/lvgl/lv_conf837.h
 locales/en.json
 .vscode/settings.json
 package.json
+node_modules
+package-lock.json
