@@ -29,6 +29,7 @@ static lv_i18n_phrase_t en_singulars[] = {
     {"UI_EMULATION", "Emulation:"},
     {"UI_CONNECTION", "Connection:"},
     {"UI_CHECK_PIECES", "Check Pieces!"},
+    {"UI_LANGUAGE", "Language:"},
     {NULL, NULL} // End mark
 };
 
@@ -63,6 +64,7 @@ static lv_i18n_phrase_t de_singulars[] = {
     {"UI_EMULATION", "Emulation:"},
     {"UI_CONNECTION", "Kommunikation:"},
     {"UI_CHECK_PIECES", "Prüfe Figuren!"},
+    {"UI_LANGUAGE", "Sprache:"},
     {NULL, NULL} // End mark
 };
 
@@ -93,10 +95,11 @@ static lv_i18n_phrase_t es_singulars[] = {
     {"UI_NEW_GAME", "Nuevo Juego"},
     {"UI_BACK", "Volver"},
     {"UI_W_QUEENS", "con Reinas"},
-    {"UI_FLIP_BOARD", "Gira el tablero"},
+    {"UI_FLIP_BOARD", "Vuelta al tablero"},
     {"UI_EMULATION", "Emulación:"},
     {"UI_CONNECTION", "Comunicación:"},
-    {"UI_CHECK_PIECES", "¡Revisa las cifras!"},
+    {"UI_CHECK_PIECES", "¡Revisa las piezas!"},
+    {"UI_LANGUAGE", "Lengua:"},
     {NULL, NULL} // End mark
 };
 
