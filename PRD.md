@@ -4,19 +4,19 @@ This document outlines the requirements for the Chesstimation project. It is a l
 
 ## 1. Underpromotion
 
-- [ ] **UI for Promotion Selection:**
-    - [ ] Create a new UI component in `src/main.cpp` using the LVGL library to display the promotion options (Queen, Rook, Bishop, or Knight).
-    - [ ] The UI component should appear when a pawn reaches the promotion rank.
-    - [ ] The UI component should be intuitive and easy to use.
+- [x] **UI for Promotion Selection:**
+    - [x] Create a new UI component in `src/main.cpp` using the LVGL library to display the promotion options (Queen, Rook, Bishop, or Knight).
+    - [x] The UI component should appear when a pawn reaches the promotion rank.
+    - [x] The UI component should be intuitive and easy to use.
 
-- [ ] **Logic for Handling Promotion:**
-    - [ ] Modify the `setPieceBackTo` function in `src/board.cpp` to handle the promotion selection.
-    - [ ] The function should wait for the user's selection from the UI.
-    - [ ] Based on the selection, the appropriate piece should be placed on the board.
+- [x] **Logic for Handling Promotion:**
+    - [x] Modify the `setPieceBackTo` function in `src/board.cpp` to handle the promotion selection.
+    - [x] The function should wait for the user's selection from the UI.
+    - [x] Based on the selection, the appropriate piece should be placed on the board.
 
-- [ ] **Communication Protocol:**
-    - [ ] Update the communication protocol to send the promotion information to the connected chess program.
-    - [ ] Modify the `generateSerialBoardMessage` function in `src/board.cpp` to include the promotion information in the message.
+- [x] **Communication Protocol:**
+    - [x] Update the communication protocol to send the promotion information to the connected chess program.
+    - [x] Modify the `generateSerialBoardMessage` function in `src/board.cpp` to include the promotion information in the message.
 
 ## 2. Improved Move Handling
 
