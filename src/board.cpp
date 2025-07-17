@@ -118,8 +118,14 @@ void Board::generateSerialBoardMessage(void) {
         for(int i=0; i<64; i++) {
             boardMessage[i+1] = flipped?FENpieceFromType(piece[i]):FENpieceFromType(piece[63-i]);
         }
-        boardMessage[65]=0;
-    }
+        if (promotionPiece != 0) {
+            boardMessage[65] = '=';
+            boardMessage[66] = FENpieceFromType(promotionPiece);
+            boardMessage[67] = 0;
+            promotionPiece = 0;
+        } else {
+            boardMessage[65]=0;
+        }    }
 }
 
 // This function is only for debug purposes and displays the board graphically via the debug serial interface
@@ -265,6 +271,15 @@ byte Board::getNextPromotionPieceForBlack(byte p) {
     return p;
 }
 
+byte Board::getPromotionPiece(byte p) {
+    if (isWhitePawn(p)) {
+        return getNextPromotionPieceForWhite(p);
+    } else if (isBlackPawn(p)) {
+        return getNextPromotionPieceForBlack(p);
+    }
+    return p;
+}
+
 void Board::setPieceBackTo(byte boardIndex)
 {
     if (liftedIdx == 0)
@@ -278,7 +293,7 @@ void Board::setPieceBackTo(byte boardIndex)
         liftedIdx--;
         if (liftedIdx >= 0)
         {
-            piece[boardIndex] = getNextPromotionPieceForWhite(0x00ff & piecesLifted[liftedIdx]);
+            piece[boardIndex] = getPromotionPiece(0x00ff & piecesLifted[liftedIdx]);
         }
     }
     // Check if black pawn was moved from row 2 to 1, then promote! (Internally rows are in reverse order 0-7 is 8-1)
@@ -289,7 +304,7 @@ void Board::setPieceBackTo(byte boardIndex)
         liftedIdx--;
         if (liftedIdx >= 0)
         {
-            piece[boardIndex] = getNextPromotionPieceForBlack(0x00ff & piecesLifted[liftedIdx]);
+            piece[boardIndex] = getPromotionPiece(0x00ff & piecesLifted[liftedIdx]);
         }
     }
     else
@@ -305,7 +320,6 @@ void Board::setPieceBackTo(byte boardIndex)
         piecesLifted[liftedIdx] = 0x0000;
     }
 }
-
 void Board::liftPieceFrom(byte boardIndex) {
       if(piece[boardIndex]==EMP) 
       {

@@ -73,8 +73,8 @@ byte mephistoLED[8][8];
 byte eeprom[5]={0,20,3,20,15};
 byte LED_startup_sequence[64] = {0,1,2,3,4,5,6,7,15,23,31,39,47,55,63,62,61,60,59,58,57,56,48,40,32,24,16,8, 9,10,11,12,13,14,22,30,38,46,54,53,52,51,50,49,41,33,25,17, 18,19,20,21,29,37,45,44,43,42,34,26, 27,28,36,35};
 byte oldBoard[64];
+byte promotionPiece = 0;
 int brightness = 255;
-
 uint16_t calibrationData[5];
 
 //BLE objects
@@ -122,7 +122,7 @@ lv_indev_drv_t indev_drv;
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *languageLbl, *flippedCB, *pegasusCB, *testCB;
 lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider, *connectionLbl, *commLbl, *emulatorsBtn, *langBtn, *langLbl;
-lv_obj_t *ui_settings_obj, *offBtnLbl, *newGameLbl, *brightLbl, *backLbl, *settingsLbl, *emulationLbl, *langDd, *connectionDd;
+lv_obj_t *ui_settings_obj, *offBtnLbl, *newGameLbl, *brightLbl, *backLbl, *settingsLbl, *emulationLbl, *langDd, *connectionDd, *promotionScreen, *promotionQueenBtn, *promotionRookBtn, *promotionBishopBtn, *promotionKnightBtn;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void displayLEDstartUpSequence()
@@ -1106,8 +1106,27 @@ static void event_handler(lv_event_t *e)
     {
       lv_scr_load(screenMain);
     }
-  }
-  if (code == LV_EVENT_VALUE_CHANGED)
+    if (obj == promotionQueenBtn)
+    {
+      promotionPiece = WQ1;
+      lv_scr_load(screenMain);
+    }
+    if (obj == promotionRookBtn)
+    {
+      promotionPiece = WR1;
+      lv_scr_load(screenMain);
+    }
+    if (obj == promotionBishopBtn)
+    {
+      promotionPiece = WB1;
+      lv_scr_load(screenMain);
+    }
+    if (obj == promotionKnightBtn)
+    {
+      promotionPiece = WN1;
+      lv_scr_load(screenMain);
+    }
+  }  if (code == LV_EVENT_VALUE_CHANGED)
   {
     if (obj == connectionDd)
     {
@@ -1455,6 +1474,37 @@ void createSettingsScreen()
 
 }
 
+
+void createPromotionScreen()
+{
+  promotionScreen = lv_obj_create(NULL);
+  lv_obj_set_size(promotionScreen, 480, 320);
+  lv_obj_set_style_bg_color(promotionScreen, lv_color_hex(0x000000), 0);
+  lv_obj_set_style_bg_opa(promotionScreen, LV_OPA_50, 0);
+
+  lv_obj_t * cont = lv_obj_create(promotionScreen);
+  lv_obj_set_size(cont, 320, 80);
+  lv_obj_align(cont, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+  promotionQueenBtn = lv_imgbtn_create(cont);
+  lv_imgbtn_set_src(promotionQueenBtn, LV_IMGBTN_STATE_RELEASED, NULL, &WQ40, NULL);
+  lv_obj_add_event_cb(promotionQueenBtn, event_handler, LV_EVENT_ALL, NULL);
+
+  promotionRookBtn = lv_imgbtn_create(cont);
+  lv_imgbtn_set_src(promotionRookBtn, LV_IMGBTN_STATE_RELEASED, NULL, &WR40, NULL);
+  lv_obj_add_event_cb(promotionRookBtn, event_handler, LV_EVENT_ALL, NULL);
+
+  promotionBishopBtn = lv_imgbtn_create(cont);
+  lv_imgbtn_set_src(promotionBishopBtn, LV_IMGBTN_STATE_RELEASED, NULL, &WB40, NULL);
+  lv_obj_add_event_cb(promotionBishopBtn, event_handler, LV_EVENT_ALL, NULL);
+
+  promotionKnightBtn = lv_imgbtn_create(cont);
+  lv_imgbtn_set_src(promotionKnightBtn, LV_IMGBTN_STATE_RELEASED, NULL, &WN40, NULL);
+  lv_obj_add_event_cb(promotionKnightBtn, event_handler, LV_EVENT_ALL, NULL);
+}
+
 void createUI()
 {
   screenMain = lv_obj_create(NULL);
@@ -1656,8 +1706,8 @@ void createUI()
   
   resetOldBoard();
   updatePiecesOnBoard();
+  createPromotionScreen();
 }
-
 void setup()
 {
 /*
@@ -1978,10 +2028,14 @@ void loop()
     for(int col = 0; col<8; col++) { // for each column
     int diff = (bitRead(chessBoard.lastRawRow[i], col) - bitRead(readRawRow[i], col));
       if(diff<0) {
+        if (chessBoard.isWhitePawn(0x00ff & chessBoard.piecesLifted[chessBoard.liftedIdx - 1]) && (getRowFromBoardIndex(toBoardIndex(i, col)) == 0)) {
+          lv_scr_load(promotionScreen);
+        } else if (chessBoard.isBlackPawn(0x00ff & chessBoard.piecesLifted[chessBoard.liftedIdx - 1]) && (getRowFromBoardIndex(toBoardIndex(i, col)) == 7)) {
+          lv_scr_load(promotionScreen);
+        }
         chessBoard.setPieceBackTo(toBoardIndex(i, col));
         setBack++;
-      }
-    }
+      }    }
   }
 
   // A figure was lifted or set back:

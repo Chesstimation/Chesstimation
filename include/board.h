@@ -78,6 +78,7 @@ public:
     // piece[64] stores, at which index position of the board which piece is located
     byte piece[64];
 
+    byte promotionPiece = 0;
     byte milleniumLEDs[9][9];
     //    byte piecesInGame[32];  // All pieces which are located on the board
     uint16_t piecesLifted[32]; // All pieces which are lifted from the board: first byte: piece type, second byte boardIdx
@@ -101,6 +102,6 @@ public:
     void setPieceBackTo(byte boardIndex);
     void liftPieceFrom(byte boardIndex);
     char FENpieceFromType(byte piece);
-    byte getNextPromotionPieceForWhite(byte p);
-    byte getNextPromotionPieceForBlack(byte p);
-};
+byte getPromotionPiece(byte p);
+     byte getNextPromotionPieceForWhite(byte p);
+     byte getNextPromotionPieceForBlack(byte p);};
