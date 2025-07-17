@@ -18,17 +18,18 @@ This document outlines the requirements for the Chesstimation project. It is a l
     - [x] Update the communication protocol to send the promotion information to the connected chess program.
     - [x] Modify the `generateSerialBoardMessage` function in `src/board.cpp` to include the promotion information in the message.
 
-## 2. Improved Move Handling
 
-- [ ] **Refactor Move Logic:**
-    - [ ] Refactor the move handling logic in the `loop` function in `src/main.cpp` to allow for more natural move input.
-    - [ ] The new logic should detect when a piece is moved to an occupied square and automatically handle the capture.
+## 3. WhitePawn iOS App Compatibility
 
-- [ ] **Update Board State:**
-    - [ ] Update the `liftPieceFrom` and `setPieceBackTo` functions in `src/board.cpp` to handle captures correctly.
-    - [ ] When a capture is detected, the captured piece should be removed from the board, and the capturing piece should be moved to the square.
+- [ ] **Investigate Communication Protocol:**
+    - [ ] Research the WhitePawn iOS app's communication protocol (e.g., OpenExchange Protocol, BLE characteristics, message formats).
+    - [ ] Analyze existing Chesstimation communication logic in `src/main.cpp` and `src/board.cpp` (Certabo, Chesslink, Pegasus emulations).
+- [ ] **Identify Discrepancies:**
+    - [ ] Compare WhitePawn's expected protocol with Chesstimation's implemented protocols to pinpoint incompatibilities.
+- [ ] **Implement Protocol Adjustments:**
+    - [ ] Modify Chesstimation's communication functions (`sendMessageToChessBoard`, `assembleIncomingChesslinkMessage`, `MyCallbacksChesslink`, `MyCallbacksPegasus`, `initBleServiceChesslink`, `initBleServicePegasus`) to align with WhitePawn's protocol.
+    - [ ] Potentially add a new emulation mode if WhitePawn uses a distinct protocol.
+- [ ] **Test Compatibility:**
+    - [ ] Conduct thorough testing with the WhitePawn iOS app to ensure seamless communication and correct board state synchronization.
 
-- [ ] **UI Feedback:**
-    - [ ] Update the UI to provide clear feedback when a capture occurs.
-    - [ ] This could include highlighting the captured piece or displaying a message on the screen.
 
