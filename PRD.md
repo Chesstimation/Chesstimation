@@ -21,12 +21,13 @@ This document outlines the requirements for the Chesstimation project. It is a l
 
 ## 3. WhitePawn iOS App Compatibility
 
-- [ ] **Investigate Communication Protocol:**
-    - [ ] Research the WhitePawn iOS app's communication protocol (e.g., OpenExchange Protocol, BLE characteristics, message formats).
-    - [ ] Analyze existing Chesstimation communication logic in `src/main.cpp` and `src/board.cpp` (Certabo, Chesslink, Pegasus emulations).
+- [x] **Investigate Communication Protocol:**
+    - [x] Research the WhitePawn iOS app's communication protocol (e.g., OpenExchange Protocol, BLE characteristics, message formats).
+    - [x] Analyze existing Chesstimation communication logic in `src/main.cpp` and `src/board.cpp` (Certabo, Chesslink, Pegasus emulations).
 - [ ] **Identify Discrepancies:**
     - [ ] Compare WhitePawn's expected protocol with Chesstimation's implemented protocols to pinpoint incompatibilities.
 - [ ] **Implement Protocol Adjustments:**
+    - [x] Add a new "WhitePawn" emulation mode with placeholder BLE UUIDs and device name.
     - [ ] Modify Chesstimation's communication functions (`sendMessageToChessBoard`, `assembleIncomingChesslinkMessage`, `MyCallbacksChesslink`, `MyCallbacksPegasus`, `initBleServiceChesslink`, `initBleServicePegasus`) to align with WhitePawn's protocol.
     - [ ] Potentially add a new emulation mode if WhitePawn uses a distinct protocol.
 - [ ] **Test Compatibility:**

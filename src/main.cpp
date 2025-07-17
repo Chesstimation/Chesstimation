@@ -1196,6 +1196,13 @@ static void event_handler(lv_event_t *e)
         chessBoard.emulation = 1;
       }
     }
+    if (obj == whitePawnCB)
+    {
+      if ((lv_obj_get_state(whitePawnCB) & LV_STATE_CHECKED) == 1)
+      {
+        chessBoard.emulation = 3;
+      }
+    }
     if (obj == flippedCB)
     {
       chessBoard.flipped = lv_obj_get_state(flippedCB) & LV_STATE_CHECKED;
