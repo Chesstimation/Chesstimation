@@ -681,13 +681,19 @@ void updatePiecesOnBoard()
     {
       if ((certPiece & 0b00001111) == 0b00000011)
       {
-        lv_obj_set_pos(bp[(certPiece>>4) & 0x0f], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
-        lv_obj_clear_flag(bp[(certPiece>>4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
+        int pawnIndex = (certPiece >> 4) & 0x0f;
+        if (pawnIndex < 8) {
+            lv_obj_set_pos(bp[pawnIndex], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
+            lv_obj_clear_flag(bp[pawnIndex], LV_OBJ_FLAG_HIDDEN);
+        }
       }
       if ((certPiece & 0b00001111) == 0b00000010)
       {
-        lv_obj_set_pos(wp[(certPiece>>4) & 0x0f], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
-        lv_obj_clear_flag(wp[(certPiece>>4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
+        int pawnIndex = (certPiece >> 4) & 0x0f;
+        if (pawnIndex < 8) {
+            lv_obj_set_pos(wp[pawnIndex], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
+            lv_obj_clear_flag(wp[pawnIndex], LV_OBJ_FLAG_HIDDEN);
+        }
       }
       if (certPiece == WK1)
       {
@@ -783,13 +789,19 @@ void updatePiecesOnBoard()
       // Piece was lifted:
       // if (certPiece == EMP)
       // {
-        if ((oldBoard[i] & 0b00001111) == 0b00000011) // Black Pawn 
+        if ((oldBoard[i] & 0b00001111) == 0b00000011) // Black Pawn
         {
-          lv_obj_add_flag(bp[(oldBoard[i] >> 4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
+            int pawnIndex = (oldBoard[i] >> 4) & 0x0f;
+            if (pawnIndex < 8) {
+                lv_obj_add_flag(bp[pawnIndex], LV_OBJ_FLAG_HIDDEN);
+            }
         }
-        if ((oldBoard[i] & 0b00001111) == 0b00000010) // White Pawn 
+        if ((oldBoard[i] & 0b00001111) == 0b00000010) // White Pawn
         {
-          lv_obj_add_flag(wp[(oldBoard[i] >> 4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
+            int pawnIndex = (oldBoard[i] >> 4) & 0x0f;
+            if (pawnIndex < 8) {
+                lv_obj_add_flag(wp[pawnIndex], LV_OBJ_FLAG_HIDDEN);
+            }
         }
         if (oldBoard[i] == WK1)
         {
@@ -1043,7 +1055,8 @@ static void event_handler(lv_event_t *e)
       chessBoard.promotionPiece = WN1;
       lv_scr_load(screenMain);
     }
-  }  if (code == LV_EVENT_VALUE_CHANGED)
+  }
+  else if (code == LV_EVENT_VALUE_CHANGED)
   {
     if (obj == connectionDd)
     {
@@ -1881,10 +1894,8 @@ void loop()
     for (int i = 0; i < 8; i++)
     {
       mephisto.writeRow(7 - i, led_buffer[i]);
-      if (led_buffer[i] != 0 && rows != 0)
-      {
+      if (rows > 0) {
         delay(LED_TIME / rows);
-        lv_task_handler();
       }
     }
     return;

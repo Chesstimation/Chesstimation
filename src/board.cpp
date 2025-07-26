@@ -282,44 +282,28 @@ byte Board::getPromotionPiece(byte p) {
 
 void Board::setPieceBackTo(byte boardIndex)
 {
-    if (liftedIdx == 0)
-        return;
-
-    // Check if white pawn was moved from row 7 to 8, then promote! (Internally rows are in reverse order 0-7 is 8-1)
-    if (((!flipped && getRowFromBoardIndex(boardIndex) == 0 && getRowFromBoardIndex((piecesLifted[liftedIdx - 1] >> 8)) == 1 ) ||
-        (flipped && getRowFromBoardIndex(boardIndex) == 7 && getRowFromBoardIndex((piecesLifted[liftedIdx - 1] >> 8)) == 6))
-        && isWhitePawn(0x00ff & piecesLifted[liftedIdx - 1]))
+    if (liftedIdx > 0)
     {
         liftedIdx--;
-        if (liftedIdx >= 0)
+        if (((!flipped && getRowFromBoardIndex(boardIndex) == 0 && getRowFromBoardIndex((piecesLifted[liftedIdx] >> 8)) == 1) ||
+            (flipped && getRowFromBoardIndex(boardIndex) == 7 && getRowFromBoardIndex((piecesLifted[liftedIdx] >> 8)) == 6)) &&
+            isWhitePawn(0x00ff & piecesLifted[liftedIdx]))
         {
             piece[boardIndex] = getPromotionPiece(0x00ff & piecesLifted[liftedIdx]);
         }
-    }
-    // Check if black pawn was moved from row 2 to 1, then promote! (Internally rows are in reverse order 0-7 is 8-1)
-    else if ((((!flipped) && getRowFromBoardIndex(boardIndex) == 7 && getRowFromBoardIndex((piecesLifted[liftedIdx - 1] >> 8)) == 6 ) ||
-             (flipped && getRowFromBoardIndex(boardIndex) == 0 && getRowFromBoardIndex((piecesLifted[liftedIdx - 1] >> 8)) == 1 ))
-             && isBlackPawn(0x00ff & piecesLifted[liftedIdx - 1]))
-    {
-        liftedIdx--;
-        if (liftedIdx >= 0)
+        // Check if black pawn was moved from row 2 to 1, then promote! (Internally rows are in reverse order 0-7 is 8-1)
+        else if ((((!flipped) && getRowFromBoardIndex(boardIndex) == 7 && getRowFromBoardIndex((piecesLifted[liftedIdx] >> 8)) == 6) ||
+                    (flipped && getRowFromBoardIndex(boardIndex) == 0 && getRowFromBoardIndex((piecesLifted[liftedIdx] >> 8)) == 1)) &&
+                    isBlackPawn(0x00ff & piecesLifted[liftedIdx]))
         {
             piece[boardIndex] = getPromotionPiece(0x00ff & piecesLifted[liftedIdx]);
         }
-    }
-    else
-    {
-        liftedIdx--;
-        if (liftedIdx >= 0)
+        else
         {
             piece[boardIndex] = 0x00ff & piecesLifted[liftedIdx];
         }
-    }
-    if (liftedIdx >= 0)
-    {
         piecesLifted[liftedIdx] = 0x0000;
-    }
-}
+    }}
 void Board::liftPieceFrom(byte boardIndex) {
       if(piece[boardIndex]==EMP) 
       {
