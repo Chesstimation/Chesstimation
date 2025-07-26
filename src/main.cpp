@@ -65,7 +65,7 @@ int millBLEinitialized = 0;
 int physicalConformity = 0;
 
 enum connectionType {USB, BT, BLE} connection;  // Should be same order as in UI
-enum languageType {EN, ES, DE} language;        // Should be same order as in UI
+enum languageType {EN, ES, DE} language = DE;        // Should be same order as in UI, default to German
 
 byte readRawRow[8];
 byte led_buffer[8];
@@ -288,7 +288,12 @@ void loadBoardSettings(void)
       }
       if (f.readBytes((char *)tempInt8, 1) == 1)
       {
-        chessBoard.emulation = tempInt8[0];
+        // Validate emulation value to prevent invalid modes
+        if (tempInt8[0] <= 2) {
+          chessBoard.emulation = tempInt8[0];
+        } else {
+          chessBoard.emulation = 1; // Default to Chesslink if invalid
+        }
       }
       if (f.readBytes((char *)tempInt8, 1) == 1)
       {
@@ -723,6 +728,13 @@ void initSerialPortCommunication(void)
     if(connection == BLE)
     {
       initBleServiceChesslink();
+    }
+  }
+  if (chessBoard.emulation == 2)
+  {
+    if(connection == BLE)
+    {
+      initBleServicePegasus();
     }
   }
 
@@ -1194,13 +1206,6 @@ static void event_handler(lv_event_t *e)
       if ((lv_obj_get_state(chesslinkCB) & LV_STATE_CHECKED) == 1)
       {
         chessBoard.emulation = 1;
-      }
-    }
-    if (obj == whitePawnCB)
-    {
-      if ((lv_obj_get_state(whitePawnCB) & LV_STATE_CHECKED) == 1)
-      {
-        chessBoard.emulation = 3;
       }
     }
     if (obj == flippedCB)

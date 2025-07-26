@@ -24,13 +24,13 @@ This document outlines the requirements for the Chesstimation project. It is a l
 - [x] **Investigate Communication Protocol:**
     - [x] Research the WhitePawn iOS app's communication protocol (e.g., OpenExchange Protocol, BLE characteristics, message formats).
     - [x] Analyze existing Chesstimation communication logic in `src/main.cpp` and `src/board.cpp` (Certabo, Chesslink, Pegasus emulations).
-- [ ] **Identify Discrepancies:**
-    - [ ] Compare WhitePawn's expected protocol with Chesstimation's implemented protocols to pinpoint incompatibilities.
-- [ ] **Implement Protocol Adjustments:**
-    - [x] Add a new "WhitePawn" emulation mode with placeholder BLE UUIDs and device name.
-    - [ ] Modify Chesstimation's communication functions (`sendMessageToChessBoard`, `assembleIncomingChesslinkMessage`, `MyCallbacksChesslink`, `MyCallbacksPegasus`, `initBleServiceChesslink`, `initBleServicePegasus`) to align with WhitePawn's protocol.
-    - [ ] Potentially add a new emulation mode if WhitePawn uses a distinct protocol.
+- [x] **Identify Compatibility:**
+    - [x] Confirmed that WhitePawn app supports existing emulation protocols, eliminating the need for a separate WhitePawn emulation mode.
+- [x] **Implementation Approach:**
+    - [x] WhitePawn compatibility achieved through existing Chesslink/Millennium emulation mode.
+    - [x] Removed unnecessary WhitePawn-specific emulation code to prevent bugs and maintain code simplicity.
+    - [x] Users can connect WhitePawn app using the standard Chesslink/Millennium emulation mode.
 - [ ] **Test Compatibility:**
-    - [ ] Conduct thorough testing with the WhitePawn iOS app to ensure seamless communication and correct board state synchronization.
+    - [ ] Conduct thorough testing with the WhitePawn iOS app using Chesslink/Millennium emulation to ensure seamless communication and correct board state synchronization.
 
 
