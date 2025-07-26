@@ -72,7 +72,6 @@ byte mephistoLED[8][8];
 byte eeprom[5]={0,20,3,20,15};
 byte LED_startup_sequence[64] = {0,1,2,3,4,5,6,7,15,23,31,39,47,55,63,62,61,60,59,58,57,56,48,40,32,24,16,8, 9,10,11,12,13,14,22,30,38,46,54,53,52,51,50,49,41,33,25,17, 18,19,20,21,29,37,45,44,43,42,34,26, 27,28,36,35};
 byte oldBoard[64];
-byte promotionPiece = 0;
 int brightness = 255;
 uint16_t calibrationData[5];
 
@@ -1026,22 +1025,22 @@ static void event_handler(lv_event_t *e)
     }
     if (obj == promotionQueenBtn)
     {
-      promotionPiece = WQ1;
+      chessBoard.promotionPiece = WQ1;
       lv_scr_load(screenMain);
     }
     if (obj == promotionRookBtn)
     {
-      promotionPiece = WR1;
+      chessBoard.promotionPiece = WR1;
       lv_scr_load(screenMain);
     }
     if (obj == promotionBishopBtn)
     {
-      promotionPiece = WB1;
+      chessBoard.promotionPiece = WB1;
       lv_scr_load(screenMain);
     }
     if (obj == promotionKnightBtn)
     {
-      promotionPiece = WN1;
+      chessBoard.promotionPiece = WN1;
       lv_scr_load(screenMain);
     }
   }  if (code == LV_EVENT_VALUE_CHANGED)
