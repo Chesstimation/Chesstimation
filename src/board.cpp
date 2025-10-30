@@ -85,7 +85,7 @@ void Board::startPosition(byte queens) {
 }
 
 Board::Board(void) {
-    nextPromotionPiece = 'Q';
+    promotionPieceW = promotionPieceB = 'Q';
     boardMessage[0]=0;
     liftedIdx=255;
     startPosition(0);
@@ -249,7 +249,7 @@ bool Board::isBlackPawn(byte piece) {
 
 byte Board::getNextPromotionPieceForWhite(byte p)
 {
-    if (nextPromotionPiece == 'N')
+    if (promotionPieceW == 'N')
     {
         // WN1 && WN2
         bool p1 = false;
@@ -266,7 +266,7 @@ byte Board::getNextPromotionPieceForWhite(byte p)
         if (!p2)
             return WN2;
     }
-    if (nextPromotionPiece == 'R')
+    if (promotionPieceW == 'R')
     {
         // WR1 && WR2
         bool p1 = false;
@@ -283,7 +283,7 @@ byte Board::getNextPromotionPieceForWhite(byte p)
         if (!p2)
             return WR2;
     }    
-    if (nextPromotionPiece == 'B')
+    if (promotionPieceW == 'B')
     {
         // WB1 && WB2
         bool p1 = false;
@@ -324,7 +324,7 @@ byte Board::getNextPromotionPieceForWhite(byte p)
 
 byte Board::getNextPromotionPieceForBlack(byte p)
 {
-    if (nextPromotionPiece == 'N')
+    if (promotionPieceB == 'N')
     {
         // BN1 && BN2
         bool p1 = false;
@@ -341,7 +341,7 @@ byte Board::getNextPromotionPieceForBlack(byte p)
         if (!p2)
             return BN2;
     }
-    if (nextPromotionPiece == 'R')
+    if (promotionPieceB == 'R')
     {
         // BR1 && BR2
         bool p1 = false;
@@ -358,7 +358,7 @@ byte Board::getNextPromotionPieceForBlack(byte p)
         if (!p2)
             return BR2;
     }    
-    if (nextPromotionPiece == 'B')
+    if (promotionPieceB == 'B')
     {
         // BB1 && BB2
         bool p1 = false;
