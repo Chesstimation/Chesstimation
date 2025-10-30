@@ -1,5 +1,5 @@
 /*  
-    Copyright 2021, 2022, 2023 Andreas Petersik (andreas.petersik@gmail.com)
+    Copyright 2021, 2022, 2023, 2024, 2025 Andreas Petersik (andreas.petersik@gmail.com)
     
     This file is part of the Chesstimation Project.
 
@@ -17,8 +17,8 @@
     along with Chesstimation.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Chesstimation 1.5"
-#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Dec 6th, 2023"
+#define VERSION     "Chesstimation 1.6.1"
+#define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Oct 30th, 2025"
 // #define BOARD_TEST
 
 #include <Arduino.h>
@@ -31,6 +31,7 @@
 
 #include <BLEDevice.h>
 #include <BLE2902.h>
+#include "BLEHIDDevice.h"
 
 // For emulations:
 #include <thread>
@@ -61,6 +62,8 @@ Mephisto mephisto;
 Board chessBoard;
 BluetoothSerial SerialBT;
 
+char* modeBleAdvertisedName = "MILLENNIUM CHESS";
+
 int millBLEinitialized = 0;
 int physicalConformity = 0;
 
@@ -89,11 +92,18 @@ std::string replyString;
 
 TFT_eSPI tft = TFT_eSPI();
 
-#define DISP_BUF_SIZE (320 * 60)
-// #define DISP_BUF_SIZE (480 * 10)
-lv_disp_draw_buf_t disp_buf;
+/*Set to your screen resolution*/
+#define TFT_HOR_RES   480
+#define TFT_VER_RES   320
 
-lv_color_t buf[DISP_BUF_SIZE];
+/*LVGL draw into this buffer, 1/10 screen size usually works well. The size is in bytes*/
+#define DISP_BUF_SIZE (320 * 96)
+// #define DISP_BUF_SIZE (320 * 60) // old size used for LVGL 8.x
+// #define DISP_BUF_SIZE (TFT_HOR_RES * TFT_VER_RES / 6 * (LV_COLOR_DEPTH / 8)) // leads to not working White Pawn
+// lv_color_t *dispBuf;//[DISP_BUF_SIZE]; 
+void *dispBuf;//[DISP_BUF_SIZE]; 
+
+lv_display_t * disp;
 
 lv_style_t fMediumStyle;
 lv_style_t fLargeStyle;
@@ -116,8 +126,7 @@ LV_IMG_DECLARE(BN40);
 LV_IMG_DECLARE(WR40);
 LV_IMG_DECLARE(BR40);
 
-lv_disp_drv_t disp_drv;
-lv_indev_drv_t indev_drv;
+lv_indev_t * indev;
 
 lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *liftedPiecesStringLbl, *debugLbl, *chessBoardCanvas, *chessBoardLbl, *batteryLbl;
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *languageLbl, *flippedCB, *pegasusCB, *testCB;
@@ -158,7 +167,11 @@ void assembleIncomingChesslinkMessage(char readChar)
 
 void displayAboutBox()
 {
-  object = lv_msgbox_create(screenMain, VERSION, ABOUT_TEXT, NULL, true);
+  object = lv_msgbox_create(screenMain);
+
+  lv_msgbox_add_title(object, VERSION);
+  lv_msgbox_add_text(object, ABOUT_TEXT);
+  lv_msgbox_add_close_button(object);
 
   lv_obj_add_style(object, &fLargeStyle, 0);
   lv_obj_set_size(object, 368, 186);
@@ -467,7 +480,7 @@ void sendChesslinkAnswer(char *incomingMessage)
   {
     debugPrint("Detected valid incoming Version Request Message V: ");
     debugPrintln(incomingMessage);
-    sendMessageToChessBoard("v0244");  // identify as Millennium Exclusive board
+    sendMessageToChessBoard("v0017");  // identify as Millennium Exclusive board: v0.23 in WhitePawn (00.00 - 00.FF)
     return;
   }
   if (strlen(incomingMessage) == 5 && incomingMessage[0] == 'R')
@@ -549,7 +562,7 @@ void sendChesslinkAnswer(char *incomingMessage)
   {
     debugPrint("Detected incoming Message I: ");
     debugPrintln(incomingMessage);
-    sendMessageToChessBoard("i00e-one\n");  // Tournament 55 board
+    sendMessageToChessBoard("iFF\n");  // Don't understand I-Message!
     return;
   }
   if (strlen(incomingMessage) == 3 && (strcmp(incomingMessage, "X58") == 0))
@@ -652,8 +665,9 @@ void initBleServiceChesslink()
 
   //Register and initialize BLE Transparent UART Mode.
   BLEDevice::deinit(true);
-  BLEDevice::init("MILLENNIUM CHESS");
-  BLEDevice::setMTU(517);
+  BLEDevice::init(modeBleAdvertisedName);
+  BLEDevice::setMTU(185);
+  // BLEDevice::setMTU(517);
 
   // Create the BLE Server
   pServer = BLEDevice::createServer();
@@ -676,7 +690,23 @@ void initBleServiceChesslink()
   // Advertise the service
   pServer->getAdvertising()->start();
 
-  //semaphore to handle data over BLE
+   pServer->getAdvertising()->setAppearance(GENERIC_HID);
+
+  pServer->getAdvertising()->addServiceUUID("49535343-fe7d-4ae5-8fa9-9fafd205e455");
+
+  pServer->getAdvertising()->setScanResponse(true);
+
+  BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+
+  oAdvertisementData.setShortName(modeBleAdvertisedName);
+  oAdvertisementData.setName(modeBleAdvertisedName);
+  oAdvertisementData.setAppearance(GENERIC_HID);
+
+  pServer->getAdvertising()->setAdvertisementData(oAdvertisementData);
+
+  pServer->getAdvertising()->start();
+  
+   //semaphore to handle data over BLE
   sendBLEsemaphore = xSemaphoreCreateMutex();
   xSemaphoreGive(sendBLEsemaphore);
 }
@@ -759,7 +789,9 @@ void updatePiecesOnBoard()
 
   for (int i = 0; i < 64; i++)
   {
+    
     certPiece = chessBoard.piece[i];
+    
     if (oldBoard[i] != certPiece)
     {
       if ((certPiece & 0b00001111) == 0b00000011)
@@ -864,8 +896,7 @@ void updatePiecesOnBoard()
       }
 
       // Piece was lifted:
-      // if (certPiece == EMP)
-      // {
+
         if ((oldBoard[i] & 0b00001111) == 0b00000011) // Black Pawn 
         {
           lv_obj_add_flag(bp[(oldBoard[i] >> 4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
@@ -946,7 +977,7 @@ void updatePiecesOnBoard()
         {
           lv_obj_add_flag(bq2, LV_OBJ_FLAG_HIDDEN);
         }
-      // }
+      
       oldBoard[i] = certPiece;
       updated++;
     }
@@ -964,7 +995,7 @@ void updatePiecesOnBoard()
 
 static void slider_event_cb(lv_event_t *e)
 {
-  lv_obj_t *slider = lv_event_get_target(e);
+  lv_obj_t *slider = (lv_obj_t*)lv_event_get_target(e);
   brightness = lv_slider_get_value(slider);
   ledcWrite(0, (uint8_t)brightness);
   // lv_label_set_text_fmt(debugLbl, "Brightness: %i", brightness);
@@ -1009,7 +1040,7 @@ void switchOff(void)
 
 // After Wakeup:
 
-  lv_scr_load(screenMain);
+  lv_screen_load(screenMain);
   loadBoardSettings();
   initSerialPortCommunication();
   ledcAttachPin(TFT_BL, 0);
@@ -1053,7 +1084,7 @@ void updateUI_language()
 static void event_handler(lv_event_t *e)
 {
   lv_event_code_t code = lv_event_get_code(e);
-  lv_obj_t *obj = lv_event_get_target(e);
+  lv_obj_t *obj = (lv_obj_t*)lv_event_get_target(e);
 
   if (code == LV_EVENT_CLICKED)
   {
@@ -1082,7 +1113,7 @@ static void event_handler(lv_event_t *e)
     }
     if (obj == settingsBtn)
     {
-      lv_scr_load(settingsScreen);
+      lv_screen_load(settingsScreen);
     }
     /*
     if (obj == emulatorsBtn)
@@ -1100,11 +1131,11 @@ static void event_handler(lv_event_t *e)
 
       physicalConformity = (lv_obj_get_state(certaboCalibCB) & LV_STATE_CHECKED); // Physical conformity not checked when using calibration Queens in Certabo Emulation!
 
-      lv_scr_load(screenMain);
+      lv_screen_load(screenMain);
     }
     else if (obj == exitSettingsBtn)
     {
-      lv_scr_load(screenMain);
+      lv_screen_load(screenMain);
     }
   }
   if (code == LV_EVENT_VALUE_CHANGED)
@@ -1185,20 +1216,20 @@ static void event_handler(lv_event_t *e)
   }
 }
 
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
+void my_disp_flush(lv_display_t *display, const lv_area_t *area, uint8_t *px_map)
 {
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
 
     tft.startWrite();
     tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.pushColors(&color_p->full, w * h, true);
+    tft.pushColors((uint16_t *)px_map, w * h, true);
     tft.endWrite();
 
-    lv_disp_flush_ready(disp);
+    lv_disp_flush_ready(display);
 }
 
-void my_input_read(lv_indev_drv_t * drv, lv_indev_data_t*data)
+void my_input_read(lv_indev_t* drv, lv_indev_data_t* data)
 {
    uint16_t touchX, touchY;
 
@@ -1236,25 +1267,22 @@ void initLVGL()
   // tft.writecommand(0x51);
   // tft.writedata(20);
 
+
   lv_init();
 
-  lv_disp_draw_buf_init(&disp_buf, buf, NULL, DISP_BUF_SIZE);
-
   /*Initialize the display*/
+  
+  disp = lv_display_create(TFT_HOR_RES, TFT_VER_RES);
+  dispBuf = heap_caps_malloc(DISP_BUF_SIZE, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 
-  lv_disp_drv_init(&disp_drv);
-  disp_drv.hor_res = 480;
-  disp_drv.ver_res = 320;
-  disp_drv.flush_cb = my_disp_flush;
-  disp_drv.draw_buf = &disp_buf;
-  lv_disp_drv_register(&disp_drv);
+  lv_display_set_flush_cb(disp, my_disp_flush);
+  lv_display_set_buffers(disp, dispBuf, NULL, DISP_BUF_SIZE, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
   /*Initialize the input device driver*/
 
-  lv_indev_drv_init(&indev_drv);          /*Descriptor of a input device driver*/
-  indev_drv.type = LV_INDEV_TYPE_POINTER; /*Touch pad is a pointer-like device*/
-  indev_drv.read_cb = my_input_read;      /*Set your driver function*/
-  lv_indev_drv_register(&indev_drv);      /*Finally register the driver*/
+  indev = lv_indev_create();
+  lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+  lv_indev_set_read_cb(indev, my_input_read);
 }
 
 void createSettingsScreen()
@@ -1459,21 +1487,16 @@ void createUI()
 {
   screenMain = lv_obj_create(NULL);
 
-  // lv_style_init(&fSmallStyle);
-  // lv_style_set_text_font(&fSmallStyle, &lv_font_montserrat_10);
-    
-  lv_style_init(&fMediumStyle);
-  // lv_font_t mediumStyleFont = lv_font_montserrat_20;
-  // mediumStyleFont.fallback = &umlaute20;
-  // lv_style_set_text_font(&fMediumStyle, &mediumStyleFont);
+  lv_style_init(&fMediumStyle); // Font Size 20
+  // lv_style_set_text_font(&fMediumStyle, &lv_font_montserrat_20);
   lv_style_set_text_font(&fMediumStyle, &montserrat_umlaute20);
     
-  lv_style_init(&fLargeStyle);
-  // lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22);  // was 22
-  lv_style_set_text_font(&fLargeStyle, &montserrat_umlaute22);  // was 22
+  lv_style_init(&fLargeStyle); // Font Size 22
+  // lv_style_set_text_font(&fLargeStyle, &lv_font_montserrat_22); 
+  lv_style_set_text_font(&fLargeStyle, &montserrat_umlaute22);  
     
-  lv_style_init(&fExtraLargeStyle);
-  lv_style_set_text_font(&fExtraLargeStyle, &lv_font_montserrat_28); // was 28
+  lv_style_init(&fExtraLargeStyle); // Font Size 28
+  lv_style_set_text_font(&fExtraLargeStyle, &lv_font_montserrat_28);
     
   object = lv_label_create(screenMain);
   lv_label_set_text(object, "Chesstimation");
@@ -1486,7 +1509,7 @@ void createUI()
   #ifdef LOLIN_D32
   batteryLbl = lv_label_create(screenMain);
   lv_obj_set_style_text_align(batteryLbl, LV_TEXT_ALIGN_LEFT, 0);
-  lv_obj_set_size(batteryLbl, 33, 15);
+  lv_obj_set_size(batteryLbl, 33, 20);
   lv_obj_set_pos(batteryLbl, 446, 0);
   lv_obj_add_style(batteryLbl, &fLargeStyle, 0);  
   #endif
@@ -1546,8 +1569,8 @@ void createUI()
 
   connectionLbl = lv_label_create(screenMain);
   lv_obj_set_style_text_align(connectionLbl, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_obj_set_size(connectionLbl, 29, 20);
-  lv_obj_set_pos(connectionLbl, 442, 75);
+  lv_obj_set_size(connectionLbl, 29, 25);
+  lv_obj_set_pos(connectionLbl, 442, 68);
   lv_obj_add_style(connectionLbl, &fLargeStyle, 0);  
 
   // Create Chessboard
@@ -1571,7 +1594,9 @@ void createUI()
         lv_obj_add_style(square[i], &dark_square, 0);
     }
   }
-  
+
+
+ 
   for (int i = 0; i < 8; i++)
   {
     wp[i] = lv_img_create(screenMain);
@@ -1656,6 +1681,7 @@ void createUI()
   
   resetOldBoard();
   updatePiecesOnBoard();
+  
 }
 
 void setup()
@@ -1705,8 +1731,6 @@ void setup()
   chessBoard.generateSerialBoardMessage();
   // chessBoard.copyPieceSetupToRaw(chessBoard.lastRawRow);
 
-  // buf = (lv_color_t*) malloc(DISP_BUF_SIZE);
-
   initLVGL();
 
   lv_i18n_init(lv_i18n_language_pack);
@@ -1716,13 +1740,12 @@ void setup()
   createSettingsScreen();
 
   updateUI_language();
-
+  
   initSerialPortCommunication();
-
-  lv_scr_load(screenMain);
-
+  lv_screen_load(screenMain);
+ 
   chessBoard.updateLiftedPiecesString();
-
+ 
   // chessBoard.printDebugMessage();
 }
 
@@ -1738,6 +1761,13 @@ void loop()
   static long long oldMessageMillis=-10000;
   unsigned long actMillis;
   actMillis = millis();
+  static unsigned long lastTickMillis = 0;
+  
+    // LVGL Tick Interface, this is required since LVGL 9.x
+  unsigned int tickPeriod = actMillis - lastTickMillis;
+  lv_tick_inc(tickPeriod);
+  lastTickMillis = actMillis;
+
   if(actMillis-oldMillis>10000) {
     float voltage = analogRead(35)/587.5;
     // char batMessage[80]="";
