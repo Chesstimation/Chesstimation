@@ -25,10 +25,10 @@ This project uses ESP32 hardware to connect an old Hegener+Glaser Mephisto Modul
   * original Certabo Software (https://www.certabo.com/)
   * Lucas Chess (https://lucaschess.pythonanywhere.com/index?lang=en)
   * and via Graham's DLLs (https://goneill.co.nz/chess.php) actually all software that can handle DGT boards.
+* Pawn underpromotion selection when reaching second last row
 
 ## Limitations:
 
-* Pawn promotion currently to queen only.
 * Captured piece needs to be removed from board before capturing piece is put to the square. 
 * Must not be combined with other modules or power supplies.
 

@@ -29,10 +29,10 @@ Für das Modul werden nur wenige Standard-Hardwarekomponenten benötigt.
   * BearChess unter Windows (http://www.solanosoft.com/index.php?page=bearchess)
   * Original Certabo Software unter Windows (https://www.certabo.com/)
 * Über Grahams DLLs (https://goneill.co.nz/chess.php) kann eigentlich jede Software verwendet werden, die DGT-Bretter ansteuern kann.
+* Kann jetzt auch Unterumwandlung (beim Erreichen der vorletzten Reihe kann man die entsprechende Figurart auswählen)
 
 ## Aktuelle Einschränkungen:
 
-* Bauernumwandlung nur in Dame.
 * Die geschlagene Figur muss erst vom Brett entfernt werden, bevor die schlagende Figur auf das Feld gesetzt wird. 
 * Kann nicht gleichzeitig mit anderen Mephisto-Modulen im Brett betrieben werden (macht aber auch keinen Sinn!).
 

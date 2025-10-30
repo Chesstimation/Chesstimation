@@ -1,5 +1,5 @@
 /*  
-    Copyright 2021 Andreas Petersik (andreas.petersik@gmail.com)
+    Copyright 2021, 2025 Andreas Petersik (andreas.petersik@gmail.com)
     
     This file is part of the Chesstimation Project.
 
@@ -72,12 +72,14 @@
 class Board
 {
 public:
-    byte emulation  = 1; // 0=Certabo, 1=Chesslink, 2=DGT Pegasus
-    byte flipped    = 0;
+    byte emulation = 1; // 0=Certabo, 1=Chesslink, 2=Pegasus
+    byte flipped = 0;
 
     // piece[64] stores, at which index position of the board which piece is located
     byte piece[64];
 
+    // sets the promotion piece as FEN piece (Q, K, R, B) in advance:
+    char nextPromotionPiece;
     byte milleniumLEDs[9][9];
     //    byte piecesInGame[32];  // All pieces which are located on the board
     uint16_t piecesLifted[32]; // All pieces which are lifted from the board: first byte: piece type, second byte boardIdx

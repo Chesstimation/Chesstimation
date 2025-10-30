@@ -17,7 +17,7 @@
     along with Chesstimation.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define VERSION     "Chesstimation 1.6.1"
+#define VERSION     "Chesstimation 1.7"
 #define ABOUT_TEXT  "\nby Dr. Andreas Petersik\nandreas.petersik@gmail.com\n\nbuilt: Oct 30th, 2025"
 // #define BOARD_TEST
 
@@ -62,7 +62,7 @@ Mephisto mephisto;
 Board chessBoard;
 BluetoothSerial SerialBT;
 
-char* modeBleAdvertisedName = "MILLENNIUM CHESS";
+char modeBleAdvertisedName[] = "MILLENNIUM CHESS";
 
 int millBLEinitialized = 0;
 int physicalConformity = 0;
@@ -132,6 +132,7 @@ lv_obj_t *settingsScreen, *settingsBtn, *btn2, *screenMain, *liftedPiecesLbl, *l
 lv_obj_t *labelA1, *exitSettingsBtn, *offBtn, *certaboCalibCB, *restartBtn, *certaboCB, *chesslinkCB, *languageLbl, *flippedCB, *pegasusCB, *testCB;
 lv_obj_t *square[64], *dummy1Btn, *calibrateBtn, *object, *brightnessSlider, *connectionLbl, *commLbl, *emulatorsBtn, *langBtn, *langLbl;
 lv_obj_t *ui_settings_obj, *offBtnLbl, *newGameLbl, *brightLbl, *backLbl, *settingsLbl, *emulationLbl, *langDd, *connectionDd;
+lv_obj_t *promotionBtn, *promotionBtnImage;
 lv_obj_t *wp[8], *bp[8], *wk, *bk, *wn1, *bn1, *wn2, *bn2, *wb1, *bb1, *wb2, *bb2, *wr1, *br1, *wr2, *br2, *wq1, *bq1, *wq2, *bq2;
 
 void displayLEDstartUpSequence()
@@ -796,13 +797,19 @@ void updatePiecesOnBoard()
     {
       if ((certPiece & 0b00001111) == 0b00000011)
       {
-        lv_obj_set_pos(bp[(certPiece>>4) & 0x0f], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
-        lv_obj_clear_flag(bp[(certPiece>>4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
+        int pawnIndex = (certPiece >> 4) & 0x0f;
+        if (pawnIndex < 8) {
+            lv_obj_set_pos(bp[pawnIndex], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
+            lv_obj_clear_flag(bp[pawnIndex], LV_OBJ_FLAG_HIDDEN);
+        }
       }
       if ((certPiece & 0b00001111) == 0b00000010)
       {
-        lv_obj_set_pos(wp[(certPiece>>4) & 0x0f], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
-        lv_obj_clear_flag(wp[(certPiece>>4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
+        int pawnIndex = (certPiece >> 4) & 0x0f;
+        if (pawnIndex < 8) {
+            lv_obj_set_pos(wp[pawnIndex], getColFromBoardIndex(i) * SQUARE_SIZE, getRowFromBoardIndex(i) * SQUARE_SIZE);
+            lv_obj_clear_flag(wp[pawnIndex], LV_OBJ_FLAG_HIDDEN);
+        }
       }
       if (certPiece == WK1)
       {
@@ -899,11 +906,17 @@ void updatePiecesOnBoard()
 
         if ((oldBoard[i] & 0b00001111) == 0b00000011) // Black Pawn 
         {
-          lv_obj_add_flag(bp[(oldBoard[i] >> 4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
+            int pawnIndex = (oldBoard[i] >> 4) & 0x0f;
+            if (pawnIndex < 8) {
+                lv_obj_add_flag(bp[pawnIndex], LV_OBJ_FLAG_HIDDEN);
+            }
         }
         if ((oldBoard[i] & 0b00001111) == 0b00000010) // White Pawn 
         {
-          lv_obj_add_flag(wp[(oldBoard[i] >> 4) & 0x0f], LV_OBJ_FLAG_HIDDEN);
+            int pawnIndex = (oldBoard[i] >> 4) & 0x0f;
+            if (pawnIndex < 8) {
+                lv_obj_add_flag(wp[pawnIndex], LV_OBJ_FLAG_HIDDEN);
+            }
         }
         if (oldBoard[i] == WK1)
         {
@@ -1051,6 +1064,53 @@ void switchOff(void)
 
 }
 
+void updatePromotionButton()
+{
+  switch (chessBoard.nextPromotionPiece)
+  {
+  case 'Q':
+    if (chessBoard.flipped)
+    {
+      lv_image_set_src(promotionBtnImage, &BQ40);
+    }
+    else
+    {
+      lv_image_set_src(promotionBtnImage, &WQ40);
+    }
+    break;
+  case 'N':
+    if (chessBoard.flipped)
+    {
+      lv_image_set_src(promotionBtnImage, &BN40);
+    }
+    else
+    {
+      lv_image_set_src(promotionBtnImage, &WN40);
+    }
+    break;
+  case 'R':
+    if (chessBoard.flipped)
+    {
+      lv_image_set_src(promotionBtnImage, &BR40);
+    }
+    else
+    {
+      lv_image_set_src(promotionBtnImage, &WR40);
+    }
+    break;
+  case 'B':
+    if (chessBoard.flipped)
+    {
+      lv_image_set_src(promotionBtnImage, &BB40);
+    }
+    else
+    {
+      lv_image_set_src(promotionBtnImage, &WB40);
+    }
+    break;
+  }
+}
+
 void updateUI_language()
 {
   if(language == ES) {
@@ -1128,6 +1188,8 @@ static void event_handler(lv_event_t *e)
       chessBoard.startPosition(lv_obj_get_state(certaboCalibCB) & LV_STATE_CHECKED);
       resetOldBoard();
       updatePiecesOnBoard();
+      chessBoard.nextPromotionPiece = 'Q';
+      updatePromotionButton();
 
       physicalConformity = (lv_obj_get_state(certaboCalibCB) & LV_STATE_CHECKED); // Physical conformity not checked when using calibration Queens in Certabo Emulation!
 
@@ -1135,10 +1197,32 @@ static void event_handler(lv_event_t *e)
     }
     else if (obj == exitSettingsBtn)
     {
-      lv_screen_load(screenMain);
+      lv_scr_load(screenMain);
+      updatePromotionButton();
+    }
+    // Promotion Button Event:
+    if (obj == promotionBtn)
+    {
+      if(chessBoard.nextPromotionPiece == 'Q')
+      {
+        chessBoard.nextPromotionPiece = 'N';
+      }
+      else if(chessBoard.nextPromotionPiece == 'N')
+      {
+        chessBoard.nextPromotionPiece = 'R';
+      }
+      else if(chessBoard.nextPromotionPiece == 'R')
+      {
+        chessBoard.nextPromotionPiece = 'B';
+      }
+      else if(chessBoard.nextPromotionPiece == 'B')
+      {
+        chessBoard.nextPromotionPiece = 'Q';
+      }
+      updatePromotionButton();
     }
   }
-  if (code == LV_EVENT_VALUE_CHANGED)
+  else if (code == LV_EVENT_VALUE_CHANGED)
   {
     if (obj == connectionDd)
     {
@@ -1541,6 +1625,16 @@ void createUI()
   lv_obj_add_style(emulatorsBtn, &fMediumStyle, 0);
 #endif
 
+  promotionBtn = lv_btn_create(screenMain);
+  lv_obj_add_flag(promotionBtn, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_add_event_cb(promotionBtn, event_handler, LV_EVENT_ALL, NULL);
+  lv_obj_set_size(promotionBtn, 45, 45);
+  promotionBtnImage = lv_image_create(promotionBtn);
+  lv_image_set_src(promotionBtnImage, &WQ40);   
+  lv_obj_center(promotionBtnImage); 
+ 
+  lv_obj_set_pos(promotionBtn, 376, 174);
+
   settingsBtn = lv_btn_create(screenMain);
   lv_obj_add_event_cb(settingsBtn, event_handler, LV_EVENT_ALL, NULL);
   lv_obj_set_size(settingsBtn, 150, 40);
@@ -1681,7 +1775,7 @@ void createUI()
   
   resetOldBoard();
   updatePiecesOnBoard();
-  
+
 }
 
 void setup()
@@ -2004,10 +2098,15 @@ void loop()
   }
 
   // Check every single field for set back piece:
-  for(int i=0; i<8; i++) { // for each row
-    for(int col = 0; col<8; col++) { // for each column
-    int diff = (bitRead(chessBoard.lastRawRow[i], col) - bitRead(readRawRow[i], col));
-      if(diff<0) {
+  // for each row
+  for (int i = 0; i < 8; i++)
+  { 
+    // for each column
+    for (int col = 0; col < 8; col++)
+    { 
+      int diff = (bitRead(chessBoard.lastRawRow[i], col) - bitRead(readRawRow[i], col));
+      if (diff < 0)
+      {
         chessBoard.setPieceBackTo(toBoardIndex(i, col));
         setBack++;
       }
@@ -2031,8 +2130,36 @@ void loop()
     updatePiecesOnBoard();
   }
 
-  for (int row=0; row<8; row++) {
-      chessBoard.lastRawRow[row]=readRawRow[row];
+  for (int row = 0; row < 8; row++)
+  {
+    chessBoard.lastRawRow[row] = readRawRow[row];
+  }
+
+  // Check if promotion button neeed to be enabled:
+  int pawn = 0;
+  for (int col = 0; col < 8; col++)
+  {
+    if (chessBoard.flipped)
+    {
+      if (chessBoard.isBlackPawn(chessBoard.piece[toBoardIndex(6, col)]))
+        pawn++;
+    }
+    else
+    {
+      if (chessBoard.isWhitePawn(chessBoard.piece[toBoardIndex(6, col)]))
+        pawn++;
+    }
+  }
+  // TODO: Remove debugging:
+  if(pawn!=0)
+    lv_label_set_text_fmt(debugLbl, "Pawns: %i", pawn);
+  if (pawn && lv_obj_has_flag(promotionBtn, LV_OBJ_FLAG_HIDDEN))
+  {
+    lv_obj_remove_flag(promotionBtn, LV_OBJ_FLAG_HIDDEN);
+  }
+  else if (!pawn && !lv_obj_has_flag(promotionBtn, LV_OBJ_FLAG_HIDDEN))
+  {
+    lv_obj_add_flag(promotionBtn, LV_OBJ_FLAG_HIDDEN);
   }
 
   // After the whole board is read and any change is regarded, the Serial Board message is re-generated:
